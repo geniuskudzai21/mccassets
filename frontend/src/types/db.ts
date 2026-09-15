@@ -42,6 +42,7 @@ export interface Department {
     location?: string | null
     created_at?: string
   }
+  Relationships: []
 }
 
 export interface Profile {
@@ -69,6 +70,7 @@ export interface Profile {
     phone?: string | null
     created_at?: string
   }
+  Relationships: []
 }
 
 export interface Asset {
@@ -138,6 +140,7 @@ export interface Asset {
     created_at?: string
     updated_at?: string
   }
+  Relationships: []
 }
 
 export interface Inspection {
@@ -183,6 +186,7 @@ export interface Inspection {
     inspected_at?: string
     created_at?: string
   }
+  Relationships: []
 }
 
 export interface MaintenanceRequest {
@@ -219,6 +223,7 @@ export interface MaintenanceRequest {
     created_at?: string
     resolved_at?: string | null
   }
+  Relationships: []
 }
 
 export interface Disposal {
@@ -246,6 +251,7 @@ export interface Disposal {
     disposal_date?: string
     approved_by?: string | null
   }
+  Relationships: []
 }
 
 export interface AuditLog {
@@ -276,6 +282,7 @@ export interface AuditLog {
     metadata?: Record<string, unknown> | null
     created_at?: string
   }
+  Relationships: []
 }
 
 // ---- Supabase Database type (supabase-js compatible) -----------------------
@@ -291,6 +298,8 @@ export interface Database {
       disposals: Disposal
       audit_log: AuditLog
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
     Enums: {
       user_role: UserRole
       asset_status: AssetStatus
