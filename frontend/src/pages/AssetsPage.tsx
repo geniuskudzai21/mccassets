@@ -151,9 +151,9 @@ export default function AssetsPage() {
 
       <form
         onSubmit={applyFilters}
-        className="mt-6 flex flex-wrap items-end gap-3 rounded-md border border-line bg-paper p-4"
+        className="mt-6 flex flex-col gap-3 rounded-md border border-line bg-paper p-4 sm:flex-row sm:flex-wrap sm:items-end"
       >
-        <div className="min-w-56 flex-1">
+        <div className="w-full sm:min-w-56 sm:flex-1">
           <label htmlFor="asset-search" className="block text-sm font-medium text-ink">
             Search
           </label>
@@ -171,7 +171,7 @@ export default function AssetsPage() {
             />
           </div>
         </div>
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             label="Status"
             options={statusOptions}
@@ -179,7 +179,7 @@ export default function AssetsPage() {
             onChange={(event) => setStatus(event.target.value)}
           />
         </div>
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             label="Type"
             options={typeOptions}
@@ -187,7 +187,7 @@ export default function AssetsPage() {
             onChange={(event) => setType(event.target.value)}
           />
         </div>
-        <div className="w-56">
+        <div className="w-full sm:w-56">
           <Select
             label="Department"
             options={departmentOptions}
@@ -195,7 +195,7 @@ export default function AssetsPage() {
             onChange={(event) => setDepartmentId(event.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2 sm:w-auto">
           <Button type="submit">Apply</Button>
           <Button type="button" variant="outline" onClick={clearFilters} aria-label="Clear filters">
             <FilterX className="h-4 w-4" aria-hidden />
@@ -236,7 +236,7 @@ export default function AssetsPage() {
       </div>
 
       {data && data.total > PAGE_SIZE && (
-        <div className="mt-4 flex items-center justify-between text-sm text-ink-muted">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-muted">
           <span>
             Showing {data.offset + 1}–{Math.min(data.offset + data.data.length, data.total)} of{' '}
             {data.total}

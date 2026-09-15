@@ -613,7 +613,7 @@ export default function InspectionFlowPage() {
         )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <Button
           variant="ghost"
           className="min-h-12"
