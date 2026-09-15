@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../hooks/useAuth.ts'
+import { LogoMark } from '../components/brand/LogoMark.tsx'
 
 const loginSchema = z.object({
   email: z.string().trim().email('Enter a valid email address'),
@@ -40,7 +41,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-paper px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="text-center">
-          <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">MCAS-ICT</h1>
+          <LogoMark size={72} className="mx-auto ring-0" />
+          <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-ink">
+            MCAS-ICT
+          </h1>
           <p className="mt-2 text-sm text-ink-muted">
             ICT Asset Management System — Mutare City Council
           </p>

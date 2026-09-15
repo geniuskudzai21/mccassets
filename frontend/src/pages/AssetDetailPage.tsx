@@ -86,7 +86,7 @@ export default function AssetDetailPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div className="w-full py-2">
       <Link
         to="/assets"
         className="inline-flex items-center gap-2 text-sm font-medium text-council-teal hover:underline"

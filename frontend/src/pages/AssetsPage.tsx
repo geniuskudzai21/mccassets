@@ -130,7 +130,7 @@ export default function AssetsPage() {
   const typeOptions = [{ value: '', label: 'All types' }, ...assetTypes]
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="w-full py-2">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl font-semibold text-ink">Asset register</h2>

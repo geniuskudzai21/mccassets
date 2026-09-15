@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
+import WorkspaceShell from '../components/layout/WorkspaceShell.tsx'
 import HomePage from '../pages/HomePage.tsx'
 import LoginPage from '../pages/LoginPage.tsx'
 import AssetsPage from '../pages/AssetsPage.tsx'
@@ -72,42 +73,34 @@ export default function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          <RequireAuth>
-            <RequireRole roles={['supervisor', 'admin']}>
-              <DashboardPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['supervisor', 'admin']}>
+            <DashboardPage />
+          </WorkspaceShell>
         }
       />
 
       <Route
         path="/admin/users"
         element={
-          <RequireAuth>
-            <RequireRole roles={['admin']}>
-              <UsersPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['admin']}>
+            <UsersPage />
+          </WorkspaceShell>
         }
       />
       <Route
         path="/admin/disposals"
         element={
-          <RequireAuth>
-            <RequireRole roles={['admin']}>
-              <DisposalsPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['admin']}>
+            <DisposalsPage />
+          </WorkspaceShell>
         }
       />
       <Route
         path="/admin/reports"
         element={
-          <RequireAuth>
-            <RequireRole roles={['admin']}>
-              <ReportsPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['admin']}>
+            <ReportsPage />
+          </WorkspaceShell>
         }
       />
 
@@ -139,41 +132,33 @@ export default function AppRoutes() {
       <Route
         path="/assets"
         element={
-          <RequireAuth>
-            <RequireRole roles={['supervisor', 'admin']}>
-              <AssetsPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['supervisor', 'admin']}>
+            <AssetsPage />
+          </WorkspaceShell>
         }
       />
       <Route
         path="/assets/new"
         element={
-          <RequireAuth>
-            <RequireRole roles={['supervisor', 'admin']}>
-              <AssetFormPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['supervisor', 'admin']}>
+            <AssetFormPage />
+          </WorkspaceShell>
         }
       />
       <Route
         path="/assets/:id"
         element={
-          <RequireAuth>
-            <RequireRole roles={['supervisor', 'admin']}>
-              <AssetDetailPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['supervisor', 'admin']}>
+            <AssetDetailPage />
+          </WorkspaceShell>
         }
       />
       <Route
         path="/assets/:id/edit"
         element={
-          <RequireAuth>
-            <RequireRole roles={['supervisor', 'admin']}>
-              <AssetFormPage />
-            </RequireRole>
-          </RequireAuth>
+          <WorkspaceShell roles={['supervisor', 'admin']}>
+            <AssetFormPage />
+          </WorkspaceShell>
         }
       />
     </Routes>

@@ -40,8 +40,8 @@ export default function DashboardPage() {
   const loading = stats === null && error === null
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
-      <header className="flex items-center justify-between border-b border-line bg-paper px-6 py-4">
+    <div className="w-full text-ink">
+      <header className="flex items-center justify-between border-b border-line bg-paper py-4">
         <h1 className="font-serif text-xl font-semibold">Supervisor dashboard</h1>
         <span className="inline-flex items-center gap-2 text-sm text-ink-muted">
           <LayoutDashboard className="h-4 w-4 text-council-teal" aria-hidden />
@@ -49,7 +49,7 @@ export default function DashboardPage() {
         </span>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="w-full py-6">
         {error ? (
           <p role="alert" className="text-sm text-status-poor">
             {error}
