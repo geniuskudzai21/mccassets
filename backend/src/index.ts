@@ -5,6 +5,7 @@ import { rateLimit } from 'express-rate-limit'
 import { config } from './config/index.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import assetRouter from './routes/asset.route.js'
+import adminRouter from './routes/admin.route.js'
 import authRouter from './routes/auth.route.js'
 import departmentRouter from './routes/department.route.js'
 import healthRouter from './routes/health.route.js'
@@ -43,6 +44,7 @@ app.use('/api/inspections', inspectionRouter)
 app.use('/api/uploads', uploadRouter)
 app.use('/api/maintenance-requests', maintenanceRouter)
 app.use('/api/users', userRouter)
+app.use('/api/admin', adminRouter)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

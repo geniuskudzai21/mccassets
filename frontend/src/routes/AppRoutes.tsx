@@ -9,6 +9,9 @@ import InspectionFlowPage from '../pages/technician/InspectionFlowPage.tsx'
 import MyInspectionsPage from '../pages/technician/MyInspectionsPage.tsx'
 import ProfilePage from '../pages/technician/ProfilePage.tsx'
 import DashboardPage from '../pages/supervisor/DashboardPage.tsx'
+import UsersPage from '../pages/admin/UsersPage.tsx'
+import DisposalsPage from '../pages/admin/DisposalsPage.tsx'
+import ReportsPage from '../pages/admin/ReportsPage.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 import type { ReactNode } from 'react'
 import type { UserRole } from '../types/db.ts'
@@ -72,6 +75,37 @@ export default function AppRoutes() {
           <RequireAuth>
             <RequireRole roles={['supervisor', 'admin']}>
               <DashboardPage />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <RequireAuth>
+            <RequireRole roles={['admin']}>
+              <UsersPage />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/disposals"
+        element={
+          <RequireAuth>
+            <RequireRole roles={['admin']}>
+              <DisposalsPage />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <RequireAuth>
+            <RequireRole roles={['admin']}>
+              <ReportsPage />
             </RequireRole>
           </RequireAuth>
         }

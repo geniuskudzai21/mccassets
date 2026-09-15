@@ -49,25 +49,30 @@ export interface Profile {
   Row: {
     id: string
     full_name: string
+    email: string | null
     role: UserRole
     department_id: string | null
     phone: string | null
+    is_active: boolean
     created_at: string
   }
   Insert: {
     id: string
     full_name: string
+    email?: string | null
     role?: UserRole
     department_id?: string | null
     phone?: string | null
+    is_active?: boolean
     created_at?: string
   }
   Update: {
-    id?: string
     full_name?: string
+    email?: string | null
     role?: UserRole
     department_id?: string | null
     phone?: string | null
+    is_active?: boolean
     created_at?: string
   }
   Relationships: []

@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom'
-import { Boxes, LayoutDashboard, ScanLine } from 'lucide-react'
+import { Boxes, LayoutDashboard, ScanLine, Settings2, Trash2, FileBarChart } from 'lucide-react'
 import Button from '../components/ui/Button.tsx'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
@@ -87,11 +87,55 @@ export default function HomePage() {
               More modules (inspections, maintenance, reports) land in upcoming builds.
             </p>
           </div>
-        ) : (
+        ) : null}
+
+        {role === 'admin' ? (
+          <div className="mt-6 space-y-3">
+            <h2 className="font-serif text-2xl font-semibold text-ink">Administration</h2>
+            <Link
+              to="/admin/users"
+              className="flex items-center gap-3 rounded-md border border-line bg-paper p-4 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+            >
+              <Settings2 className="h-5 w-5 text-council-teal" aria-hidden />
+              <div>
+                <p className="font-medium text-ink">User management</p>
+                <p className="text-sm text-ink-muted">
+                  Invite staff, set roles and departments, control access.
+                </p>
+              </div>
+            </Link>
+            <Link
+              to="/admin/disposals"
+              className="flex items-center gap-3 rounded-md border border-line bg-paper p-4 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+            >
+              <Trash2 className="h-5 w-5 text-council-teal" aria-hidden />
+              <div>
+                <p className="font-medium text-ink">Disposals workflow</p>
+                <p className="text-sm text-ink-muted">
+                  Record asset disposals and manage approval.
+                </p>
+              </div>
+            </Link>
+            <Link
+              to="/admin/reports"
+              className="flex items-center gap-3 rounded-md border border-line bg-paper p-4 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+            >
+              <FileBarChart className="h-5 w-5 text-council-teal" aria-hidden />
+              <div>
+                <p className="font-medium text-ink">Reports</p>
+                <p className="text-sm text-ink-muted">
+                  Summaries, depreciation table and replacement forecasting, exportable to PDF.
+                </p>
+              </div>
+            </Link>
+          </div>
+        ) : null}
+
+        {role === 'technician' || role === null || role === undefined ? (
           <p className="text-sm text-ink-muted">
             Technician workflow (scan, inspections, offline queue) is coming in a later build.
           </p>
-        )}
+        ) : null}
       </main>
     </div>
   )
