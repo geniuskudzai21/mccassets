@@ -1,8 +1,19 @@
 import { z } from 'zod'
-import { assetStatusSchema } from './asset.schema.js'
+import { assetStatusSchema, assetTypeSchema } from './asset.schema.js'
 
 export const createInspectionSchema = z.object({
   asset_id: z.string().uuid(),
+  status: assetStatusSchema,
+  notes: z.string().max(1000).optional(),
+  photo_urls: z.array(z.string().url().max(500)).max(20).optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  client_uuid: z.string().uuid().optional(),
+})
+
+export const createNewAssetInspectionSchema = z.object({
+  asset_tag: z.string().trim().min(1).max(50),
+  type: assetTypeSchema,
   status: assetStatusSchema,
   notes: z.string().max(1000).optional(),
   photo_urls: z.array(z.string().url().max(500)).max(20).optional(),
@@ -35,5 +46,6 @@ export const syncInspectionsSchema = z
   .strict()
 
 export type CreateInspectionInput = z.infer<typeof createInspectionSchema>
+export type CreateNewAssetInspectionInput = z.infer<typeof createNewAssetInspectionSchema>
 export type SyncInspectionItem = z.infer<typeof syncInspectionItemSchema>
 export type InspectionQuery = z.infer<typeof inspectionQuerySchema>

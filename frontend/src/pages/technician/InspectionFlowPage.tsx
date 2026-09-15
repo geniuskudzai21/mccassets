@@ -24,11 +24,17 @@ import { api, apiPost } from '../../lib/api.ts'
 import { queueInspection } from '../../lib/sync.ts'
 import { uploadPhotoBlob } from '../../lib/uploads.ts'
 import { assetTypeLabel } from '../../types/asset.ts'
+import { assetTypes } from '../../schemas/asset.schema.ts'
 import type { AssetListResponse, AssetRow } from '../../types/asset.ts'
-import type { AssetStatus } from '../../types/db.ts'
+import type { AssetStatus, AssetType } from '../../types/db.ts'
 import type { InspectionRow } from '../../types/asset.ts'
 
 const STEPS = ['Asset', 'Condition', 'Photo', 'Location', 'Review'] as const
+
+interface NewAssetPick {
+  asset_tag: string
+  type: AssetType
+}
 
 const conditionOptions: {
   status: AssetStatus
@@ -58,6 +64,9 @@ export default function InspectionFlowPage() {
   const [scanning, setScanning] = useState(false)
   const [manualTag, setManualTag] = useState('')
   const [asset, setAsset] = useState<AssetRow | null>(null)
+  const [newItemOpen, setNewItemOpen] = useState(false)
+  const [newAsset, setNewAsset] = useState<NewAssetPick | null>(null)
+  const [newAssetType, setNewAssetType] = useState<AssetType>('other')
   const [assetError, setAssetError] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [status, setStatus] = useState<AssetStatus | null>(null)
@@ -101,7 +110,9 @@ export default function InspectionFlowPage() {
           item.serial_number?.toLowerCase() === q.toLowerCase(),
       )
       if (!match) {
-        setAssetError(`No asset matches “${q}”. Check the tag and try again.`)
+        setAssetError(`No asset matches “${q}”. It is not in the register yet.`)
+        setNewItemOpen(true)
+        setManualTag(q)
         return
       }
       setAsset(match)
@@ -149,32 +160,53 @@ export default function InspectionFlowPage() {
   }
 
   async function submitInspection() {
-    if (!asset || !status || !user) return
+    if ((!asset && !newAsset) || !status || !user) return
     setSubmitting(true)
     setSubmitError(null)
     try {
-      if (navigator.onLine) {
-        const photoUrls: string[] = []
-        for (const file of photos) {
-          photoUrls.push(await uploadPhotoBlob(file, file.type || 'image/jpeg'))
+      const photoUrls: string[] = []
+      for (const file of photos) {
+        photoUrls.push(await uploadPhotoBlob(file, file.type || 'image/jpeg'))
+      }
+      if (newAsset) {
+        if (!navigator.onLine) {
+          throw new Error('A new item can only be registered while online.')
         }
-        await apiPost<{ data: InspectionRow }>('/api/inspections', {
-          asset_id: asset.id,
+        await apiPost<{ data: InspectionRow }>('/api/inspections/new-asset', {
+          asset_tag: newAsset.asset_tag,
+          type: newAsset.type,
           status,
           notes: notes.trim() || undefined,
           photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
           lat: location?.lat,
           lng: location?.lng,
         })
-      } else {
+        setSubmittedOffline(false)
+        setDone(true)
+        setStep(4)
+        return
+      }
+      if (!navigator.onLine) {
         throw new Error('offline')
       }
+      await apiPost<{ data: InspectionRow }>('/api/inspections', {
+        asset_id: asset!.id,
+        status,
+        notes: notes.trim() || undefined,
+        photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
+        lat: location?.lat,
+        lng: location?.lng,
+      })
       setSubmittedOffline(false)
       setDone(true)
       setStep(4)
-    } catch {
+    } catch (err) {
+      if (newAsset || (err instanceof Error && err.message !== 'offline')) {
+        setSubmitError(err instanceof Error ? err.message : 'Could not submit the inspection.')
+        return
+      }
       await queueInspection({
-        asset_id: asset.id,
+        asset_id: asset!.id,
         status,
         notes: notes.trim() || undefined,
         lat: location?.lat,
@@ -192,7 +224,7 @@ export default function InspectionFlowPage() {
   function canContinue(): boolean {
     switch (step) {
       case 0:
-        return asset != null
+        return asset != null || newAsset != null
       case 1:
         return status != null
       case 2:
@@ -221,7 +253,8 @@ export default function InspectionFlowPage() {
           {submittedOffline ? 'Saved to this device' : 'Inspection submitted'}
         </h2>
         <p className="mt-2 text-sm text-ink-muted">
-          {asset?.asset_tag} recorded as <span className="capitalize">{status}</span>.
+          {asset?.asset_tag ?? newAsset?.asset_tag} {newAsset ? '(new item)' : ''} recorded as{' '}
+          <span className="capitalize">{status}</span>.
         </p>
         {submittedOffline ? (
           <p className="mx-auto mt-3 max-w-xs rounded-md border border-council-teal/30 bg-council-teal/10 px-3 py-2 text-sm text-council-teal">
@@ -310,22 +343,93 @@ export default function InspectionFlowPage() {
               </div>
             )}
 
+            {newItemOpen ? (
+              <div className="mt-4 rounded-md border border-line bg-paper p-4">
+                <div className="flex gap-2">
+                  <CircleAlert className="h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
+                  <p className="text-sm text-ink">
+                    This item is not in the register. Register it now and start the inspection.
+                  </p>
+                </div>
+                <label htmlFor="new-tag" className="mt-3 block text-sm font-medium text-ink">
+                  Asset tag / serial
+                </label>
+                <input
+                  id="new-tag"
+                  value={manualTag}
+                  onChange={(event) => setManualTag(event.target.value)}
+                  placeholder="e.g. MC-ICT-0001"
+                  className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal"
+                />
+                <label htmlFor="new-type" className="mt-3 block text-sm font-medium text-ink">
+                  Type
+                </label>
+                <select
+                  id="new-type"
+                  value={newAssetType}
+                  onChange={(event) => setNewAssetType(event.target.value as AssetType)}
+                  className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-council-teal"
+                >
+                  {assetTypes.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {assetTypeLabel[option.value] ?? option.value}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  className="mt-4 w-full"
+                  disabled={manualTag.trim() === ''}
+                  onClick={() => {
+                    setNewAsset({ asset_tag: manualTag.trim(), type: newAssetType })
+                    setNewItemOpen(false)
+                    setStep(1)
+                  }}
+                >
+                  Continue as new item
+                  <ChevronRight className="h-5 w-5" aria-hidden />
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setAsset(null)
+                  setNewItemOpen(true)
+                  setManualTag('')
+                }}
+                className="mt-3 rounded-md text-sm font-medium text-council-teal underline-offset-4 transition-colors hover:underline focus:outline-none focus:ring-2 focus:ring-council-teal"
+              >
+                Not in the register? Register a new item
+              </button>
+            )}
+
             {assetError ? (
               <p role="alert" className="mt-3 text-sm text-status-poor">
                 {assetError}
               </p>
             ) : null}
 
-            {asset ? (
-              <div className="mt-4 rounded-md border border-line bg-paper p-4 shadow-sm">
-                <p className="text-sm text-ink-muted">Selected asset</p>
-                <p className="mt-1 font-serif text-lg font-semibold text-ink">{asset.asset_tag}</p>
-                <p className="text-sm text-ink-muted">
-                  {assetTypeLabel[asset.type] ?? asset.type}
-                  {asset.brand ? ` · ${asset.brand}` : ''}
-                  {asset.model ? ` ${asset.model}` : ''}
+            {newAsset ? (
+              <div className="mt-4 rounded-md border border-line bg-paper p-4">
+                <p className="text-sm text-ink-muted">New item to register</p>
+                <p className="mt-1 font-serif text-lg font-semibold text-ink">
+                  {newAsset.asset_tag}
                 </p>
-                <div className="mt-3">
+                <p className="text-sm text-ink-muted">
+                  {assetTypeLabel[newAsset.type] ?? newAsset.type} · new item
+                </p>
+              </div>
+            ) : asset ? (
+              <div className="mt-4 rounded-md border border-line bg-paper p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-ink">{asset.asset_tag}</p>
+                    <p className="mt-0.5 text-sm text-ink-muted">
+                      {assetTypeLabel[asset.type] ?? asset.type}
+                      {asset.brand ? ` · ${asset.brand}` : ''}
+                      {asset.model ? ` ${asset.model}` : ''}
+                    </p>
+                  </div>
                   <StatusBadge status={asset.current_status} />
                 </div>
               </div>
@@ -456,9 +560,18 @@ export default function InspectionFlowPage() {
           <section>
             <p className="text-sm text-ink-muted">Review and submit this inspection.</p>
             <dl className="mt-3 space-y-3 rounded-md border border-line bg-paper p-4 shadow-sm text-sm">
-              <div>
-                <dt className="text-ink-muted">Asset</dt>
-                <dd className="mt-0.5 font-medium text-ink">{asset?.asset_tag}</dd>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <dt className="text-ink-muted">Asset</dt>
+                  <dd className="mt-0.5 font-medium text-ink">
+                    {asset?.asset_tag ?? newAsset?.asset_tag}
+                  </dd>
+                </div>
+                {newAsset ? (
+                  <span className="rounded-full border border-council-teal/30 bg-council-teal/10 px-2 py-0.5 text-xs font-medium text-council-teal">
+                    New item
+                  </span>
+                ) : null}
               </div>
               <div>
                 <dt className="text-ink-muted">Condition</dt>

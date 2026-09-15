@@ -3,15 +3,61 @@ import { getSupabase } from '../config/supabase.js'
 import { HttpError } from '../middleware/errorHandler.js'
 import {
   createInspectionSchema,
+  createNewAssetInspectionSchema,
   inspectionQuerySchema,
   syncInspectionsSchema,
 } from '../schemas/inspection.schema.js'
 import { applyInspectionResult } from '../services/assetStatus.js'
-import type { Inspection } from '../types/db.js'
+import type { AssetStatus, Inspection } from '../types/db.js'
 
 const MAX_SYNC_BATCH = 50
 
 type InspectionRow = Inspection['Row']
+
+interface InspectionRecordParams {
+  assetId: string
+  technicianId: string
+  status: AssetStatus
+  notes?: string | null
+  photoUrls?: string[] | null
+  lat?: number | null
+  lng?: number | null
+  clientUuid?: string | null
+}
+
+async function createInspectionRecord(
+  supabase: ReturnType<typeof getSupabase>,
+  params: InspectionRecordParams,
+): Promise<InspectionRow> {
+  const { data, error } = await supabase
+    .from('inspections')
+    .insert({
+      asset_id: params.assetId,
+      technician_id: params.technicianId,
+      status: params.status,
+      notes: params.notes ?? null,
+      photo_urls: params.photoUrls ?? null,
+      lat: params.lat ?? null,
+      lng: params.lng ?? null,
+      client_uuid: params.clientUuid ?? null,
+      sync_status: 'synced',
+    })
+    .select('*')
+    .single()
+
+  if (error) {
+    throw new HttpError(500, 'Failed to save inspection')
+  }
+
+  await applyInspectionResult({
+    assetId: params.assetId,
+    inspectionId: data.id,
+    status: params.status,
+    technicianId: params.technicianId,
+  })
+
+  return data as InspectionRow
+}
 
 export async function listInspections(req: Request, res: Response) {
   const query = inspectionQuerySchema.parse(req.query)
@@ -95,6 +141,81 @@ export async function createInspection(req: Request, res: Response) {
   })
 
   res.status(201).json({ data: inspection as InspectionRow })
+}
+
+/**
+ * Register a brand-new asset from the field and immediately record an
+ * inspection against it. Intended for items that turn up without a tag in the
+ * register. If the tag already exists, the inspection is attached to it.
+ */
+export async function createNewAssetInspection(req: Request, res: Response) {
+  const body = createNewAssetInspectionSchema.parse(req.body)
+  const technicianId = req.user?.id
+
+  if (!technicianId) {
+    throw new HttpError(401, 'Authentication required')
+  }
+
+  const supabase = getSupabase()
+  const assetTag = body.asset_tag.trim()
+
+  let assetId: string
+
+  const { data: existing, error: existingError } = await supabase
+    .from('assets')
+    .select('id')
+    .ilike('asset_tag', assetTag)
+    .maybeSingle()
+
+  if (existingError) {
+    throw new HttpError(500, 'Failed to look up asset')
+  }
+
+  if (existing) {
+    assetId = existing.id
+  } else {
+    const { data: created, error } = await supabase
+      .from('assets')
+      .insert({
+        asset_tag: assetTag,
+        type: body.type,
+        purchase_date: new Date().toISOString(),
+        purchase_cost: 0,
+        last_lat: body.lat ?? null,
+        last_lng: body.lng ?? null,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      if (error.code === '23505') {
+        const { data: raced } = await supabase
+          .from('assets')
+          .select('id')
+          .eq('asset_tag', assetTag)
+          .maybeSingle()
+        if (!raced) throw new HttpError(500, 'Failed to register new asset')
+        assetId = raced.id
+      } else {
+        throw new HttpError(500, 'Failed to register new asset')
+      }
+    } else {
+      assetId = created.id
+    }
+  }
+
+  const inspection = await createInspectionRecord(supabase, {
+    assetId,
+    technicianId,
+    status: body.status,
+    notes: body.notes ?? null,
+    photoUrls: body.photo_urls ?? null,
+    lat: body.lat ?? null,
+    lng: body.lng ?? null,
+    clientUuid: body.client_uuid ?? null,
+  })
+
+  res.status(201).json({ data: inspection })
 }
 
 /**

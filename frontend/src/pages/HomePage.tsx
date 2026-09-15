@@ -61,7 +61,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
-      <header className="border-b border-line bg-paper">
+      <header className="sticky top-0 z-10 border-b border-line bg-paper">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 py-4">
           <Link
             to="/"
