@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full text-ink">
-      <header className="flex items-center justify-between border-b border-line bg-paper py-4">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper py-4">
         <h1 className="font-serif text-xl font-semibold">Supervisor dashboard</h1>
         <span className="inline-flex items-center gap-2 text-sm text-ink-muted">
           <LayoutDashboard className="h-4 w-4 text-council-teal" aria-hidden />
@@ -56,8 +56,8 @@ export default function DashboardPage() {
           </p>
         ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <section className="rounded-md border border-line bg-paper p-5">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <section className="min-w-0 rounded-md border border-line bg-paper p-5">
             <h2 className="font-serif text-lg font-semibold text-ink">Status breakdown</h2>
             <p className="mb-4 mt-0.5 text-sm text-ink-muted">
               Asset register by current condition.
@@ -69,7 +69,7 @@ export default function DashboardPage() {
             )}
           </section>
 
-          <section className="rounded-md border border-line bg-paper p-5 lg:col-span-2">
+          <section className="min-w-0 rounded-md border border-line bg-paper p-5">
             <h2 className="font-serif text-lg font-semibold text-ink">Assets map</h2>
             <p className="mb-4 mt-0.5 text-sm text-ink-muted">
               Geolocated assets, colored by status.

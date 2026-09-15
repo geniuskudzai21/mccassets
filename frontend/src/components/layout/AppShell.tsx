@@ -102,7 +102,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full overflow-x-clip bg-paper text-ink">
+    <div className="min-h-screen w-full overflow-x-clip bg-paper text-ink">
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-paper px-4 py-3 lg:hidden">
         <Link
           to="/"
@@ -157,19 +157,25 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-paper lg:flex">
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 px-5 py-5 focus:outline-none focus:ring-2 focus:ring-council-teal"
-        >
-          <LogoMark size={38} ringless />
-          <span className="font-serif text-lg font-semibold tracking-tight">MCAS-ICT</span>
-        </Link>
-        <NavLinks role={role} />
-        <UserBlock profileName={profile?.full_name ?? '—'} role={role} onSignOut={handleSignOut} />
-      </aside>
+      <div className="flex min-h-screen w-full">
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-paper lg:flex">
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 px-5 py-5 focus:outline-none focus:ring-2 focus:ring-council-teal"
+          >
+            <LogoMark size={38} ringless />
+            <span className="font-serif text-lg font-semibold tracking-tight">MCAS-ICT</span>
+          </Link>
+          <NavLinks role={role} />
+          <UserBlock
+            profileName={profile?.full_name ?? '—'}
+            role={role}
+            onSignOut={handleSignOut}
+          />
+        </aside>
 
-      <main className="min-w-0 flex-1 px-5 py-6 lg:px-[30px]">{children}</main>
+        <main className="min-w-0 flex-1 px-5 py-6 lg:px-[30px]">{children}</main>
+      </div>
     </div>
   )
 }

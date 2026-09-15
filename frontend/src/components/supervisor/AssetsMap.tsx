@@ -43,7 +43,7 @@ export function AssetsMap({ assets }: AssetsMapProps) {
     <MapContainer
       bounds={bounds}
       boundsOptions={{ padding: [24, 24] }}
-      className="h-[420px] w-full rounded-md border border-line"
+      className="h-[320px] w-full min-w-0 rounded-md border border-line lg:h-[420px]"
       scrollWheelZoom={false}
     >
       <TileLayer
