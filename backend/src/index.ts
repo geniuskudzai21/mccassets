@@ -9,6 +9,8 @@ import authRouter from './routes/auth.route.js'
 import departmentRouter from './routes/department.route.js'
 import healthRouter from './routes/health.route.js'
 import { inspectionRouter, uploadRouter } from './routes/inspection.route.js'
+import maintenanceRouter from './routes/maintenance.route.js'
+import userRouter from './routes/user.route.js'
 
 const app = express()
 
@@ -39,6 +41,8 @@ app.use('/api/departments', departmentRouter)
 app.use('/api/assets', assetRouter)
 app.use('/api/inspections', inspectionRouter)
 app.use('/api/uploads', uploadRouter)
+app.use('/api/maintenance-requests', maintenanceRouter)
+app.use('/api/users', userRouter)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

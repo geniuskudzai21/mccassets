@@ -8,6 +8,7 @@ import AssetFormPage from '../pages/AssetFormPage.tsx'
 import InspectionFlowPage from '../pages/technician/InspectionFlowPage.tsx'
 import MyInspectionsPage from '../pages/technician/MyInspectionsPage.tsx'
 import ProfilePage from '../pages/technician/ProfilePage.tsx'
+import DashboardPage from '../pages/supervisor/DashboardPage.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 import type { ReactNode } from 'react'
 import type { UserRole } from '../types/db.ts'
@@ -64,6 +65,17 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <RequireAuth>
+            <RequireRole roles={['supervisor', 'admin']}>
+              <DashboardPage />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
 
       <Route
         path="/scan"

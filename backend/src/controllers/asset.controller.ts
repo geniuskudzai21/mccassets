@@ -53,6 +53,38 @@ export async function listAssets(req: Request, res: Response) {
   })
 }
 
+export async function getAssetStats(_req: Request, res: Response) {
+  const supabase = getSupabase()
+
+  const { data, error } = await supabase
+    .from('assets')
+    .select('id, asset_tag, type, current_status, brand, model, building, room, last_lat, last_lng')
+
+  if (error) {
+    throw new HttpError(500, 'Failed to load asset stats')
+  }
+
+  const rows = data ?? []
+  const byStatus: Record<string, number> = {
+    good: 0,
+    fair: 0,
+    poor: 0,
+    disposal: 0,
+  }
+
+  for (const row of rows) {
+    byStatus[row.current_status] = (byStatus[row.current_status] ?? 0) + 1
+  }
+
+  res.json({
+    data: {
+      total: rows.length,
+      by_status: byStatus,
+      located: rows.filter((row) => row.last_lat != null && row.last_lng != null),
+    },
+  })
+}
+
 export async function getAssetById(req: Request, res: Response) {
   const supabase = getSupabase()
   const assetId = paramId(req)

@@ -23,3 +23,13 @@ body {
   color: var(--color-ink);
   background-color: var(--color-paper);
 }
+
+.asset-map-marker > span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border-width: 2px;
+  border-style: solid;
+  box-shadow: 0 0 0 1px rgb(28 28 26 / 0.15);
+}

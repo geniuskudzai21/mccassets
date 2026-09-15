@@ -4,6 +4,7 @@ import {
   deleteAsset,
   getAssetById,
   getAssetHistory,
+  getAssetStats,
   listAssets,
   updateAsset,
 } from '../controllers/asset.controller.js'
@@ -15,6 +16,7 @@ const router = Router()
 router.use(authenticate)
 
 router.get('/', listAssets)
+router.get('/stats', requireRole('supervisor', 'admin'), getAssetStats)
 router.get('/:id/history', getAssetHistory)
 router.get('/:id', getAssetById)
 router.post('/', requireRole('supervisor', 'admin'), createAsset)

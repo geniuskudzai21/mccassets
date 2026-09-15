@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom'
-import { Boxes, ScanLine } from 'lucide-react'
+import { Boxes, LayoutDashboard, ScanLine } from 'lucide-react'
 import Button from '../components/ui/Button.tsx'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
@@ -59,6 +59,18 @@ export default function HomePage() {
         {role === 'supervisor' || role === 'admin' ? (
           <div className="space-y-3">
             <h2 className="font-serif text-2xl font-semibold text-ink">Workspace</h2>
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-3 rounded-md border border-line bg-paper p-4 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+            >
+              <LayoutDashboard className="h-5 w-5 text-council-teal" aria-hidden />
+              <div>
+                <p className="font-medium text-ink">Supervisor dashboard</p>
+                <p className="text-sm text-ink-muted">
+                  Status breakdown chart, live asset map and maintenance requests.
+                </p>
+              </div>
+            </Link>
             <Link
               to="/assets"
               className="flex items-center gap-3 rounded-md border border-line bg-paper p-4 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
