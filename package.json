@@ -1,0 +1,18 @@
+{
+  "name": "mcas-ict",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCAS-ICT — ICT Asset Management System for Mutare City Council",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "npm run dev --workspace backend",
+    "build:frontend": "npm run build --workspace frontend",
+    "build:backend": "npm run build --workspace backend",
+    "lint": "npm run lint --workspace frontend && npm run lint --workspace backend",
+    "format": "npm run format --workspace frontend && npm run format --workspace backend"
+  }
+}

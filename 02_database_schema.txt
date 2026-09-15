@@ -1,0 +1,138 @@
+MCAS-ICT — DATABASE SCHEMA (Supabase PostgreSQL)
+==================================================
+
+Note: Supabase Auth manages the `auth.users` table. We extend it with a
+`profiles` table (1:1 via user id) rather than duplicating auth fields.
+
+-- ENUMS --------------------------------------------------------------
+CREATE TYPE user_role AS ENUM ('technician', 'supervisor', 'admin');
+CREATE TYPE asset_status AS ENUM ('good', 'fair', 'poor', 'disposal');
+CREATE TYPE asset_type AS ENUM ('computer', 'laptop', 'printer', 'router',
+                                 'projector', 'server', 'other');
+CREATE TYPE request_status AS ENUM ('pending', 'approved', 'in_progress',
+                                      'completed', 'rejected');
+CREATE TYPE sync_status AS ENUM ('synced', 'pending', 'conflict');
+
+-- PROFILES -------------------------------------------------------------
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  role user_role NOT NULL DEFAULT 'technician',
+  department_id UUID REFERENCES departments(id),
+  phone TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- DEPARTMENTS ------------------------------------------------------------
+CREATE TABLE departments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  location TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ASSETS -----------------------------------------------------------------
+CREATE TABLE assets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_tag TEXT NOT NULL UNIQUE,        -- printed QR/barcode value
+  type asset_type NOT NULL,
+  brand TEXT,
+  model TEXT,
+  serial_number TEXT,
+  department_id UUID REFERENCES departments(id),
+  assigned_user TEXT,                     -- staff member using it (free text ok)
+  purchase_date DATE NOT NULL,
+  purchase_cost NUMERIC(12,2) NOT NULL,
+  useful_life_years INT NOT NULL DEFAULT 5,
+  current_status asset_status NOT NULL DEFAULT 'good',
+  last_lat NUMERIC(9,6),
+  last_lng NUMERIC(9,6),
+  building TEXT,                          -- fallback since GPS is imprecise indoors
+  room TEXT,
+  warranty_expiry DATE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- INSPECTIONS --------------------------------------------------------------
+CREATE TABLE inspections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  technician_id UUID NOT NULL REFERENCES profiles(id),
+  status asset_status NOT NULL,
+  notes TEXT,
+  photo_urls TEXT[],                      -- Supabase Storage paths
+  lat NUMERIC(9,6),
+  lng NUMERIC(9,6),
+  client_uuid UUID,                       -- generated offline, for idempotent sync
+  sync_status sync_status NOT NULL DEFAULT 'synced',
+  inspected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE UNIQUE INDEX ON inspections (client_uuid) WHERE client_uuid IS NOT NULL;
+
+-- MAINTENANCE REQUESTS -------------------------------------------------------
+CREATE TABLE maintenance_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id UUID NOT NULL REFERENCES assets(id),
+  raised_by UUID REFERENCES profiles(id),
+  assigned_to UUID REFERENCES profiles(id),
+  status request_status NOT NULL DEFAULT 'pending',
+  description TEXT NOT NULL,
+  estimated_cost NUMERIC(12,2),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  resolved_at TIMESTAMPTZ
+);
+
+-- DISPOSALS ------------------------------------------------------------------
+CREATE TABLE disposals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id UUID NOT NULL REFERENCES assets(id),
+  disposed_by UUID REFERENCES profiles(id),
+  reason TEXT NOT NULL,
+  disposal_date DATE NOT NULL DEFAULT now(),
+  approved_by UUID REFERENCES profiles(id)
+);
+
+-- AUDIT LOG --------------------------------------------------------------------
+CREATE TABLE audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id),
+  action TEXT NOT NULL,           -- e.g. 'asset.status_changed'
+  entity_type TEXT NOT NULL,
+  entity_id UUID NOT NULL,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS POLICIES (enable RLS on every table above) -------------------------------
+-- profiles: users can read own row; admins read all
+-- assets: technicians/supervisors/admins can SELECT all;
+--         only supervisor/admin can INSERT/UPDATE/DELETE
+-- inspections: technician can INSERT own; SELECT own + supervisor/admin SELECT all
+-- maintenance_requests: supervisor/admin full access; technician SELECT assigned only
+-- disposals: admin only for INSERT; supervisor/admin SELECT
+-- audit_log: admin SELECT only; system-inserted via backend service role
+
+Example policy pattern:
+  CREATE POLICY "technicians insert own inspections"
+  ON inspections FOR INSERT
+  WITH CHECK (auth.uid() = technician_id);
+
+  CREATE POLICY "supervisors and admins view all assets"
+  ON assets FOR SELECT
+  USING (
+    EXISTS (SELECT 1 FROM profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role IN ('supervisor','admin'))
+    OR true  -- all authenticated roles can view assets; restrict as needed
+  );
+
+NOTES
+-----
+- Depreciation is NOT stored — compute on read:
+  age_years = (current_date - purchase_date) / 365
+  depreciated_value = purchase_cost * max(0, 1 - age_years/useful_life_years)
+- current_status on `assets` is a cached/derived field, updated by backend
+  service whenever a new inspection is submitted (business logic lives in
+  backend/src/services/assetStatus.ts, not in the DB or frontend).

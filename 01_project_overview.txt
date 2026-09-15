@@ -1,0 +1,85 @@
+MCAS-ICT — PROJECT OVERVIEW & ARCHITECTURE
+============================================
+
+PROJECT
+-------
+ICT Asset Management System for Mutare City Council.
+Web + PWA app replacing manual/Excel asset tracking with a centralized
+system for ICT Technicians, Supervisors, and Admins.
+
+TECH STACK
+----------
+Frontend:      React + Vite + TypeScript
+UI:            Tailwind CSS + Lucide React icons
+Backend:       Node.js + Express.js + TypeScript
+Database:      Supabase PostgreSQL
+Auth:          Supabase Auth (JWT, role-based)
+File Storage:  Supabase Storage (asset photos)
+PWA:           Vite PWA Plugin + Service Worker
+Offline Sync:  IndexedDB via Dexie.js (write queue pattern)
+GPS:           Browser Geolocation API
+Maps:          Leaflet + OpenStreetMap
+QR/Barcode:    html5-qrcode
+Charts:        Recharts
+Forms:         React Hook Form + Zod
+Reports:       jsPDF
+Deployment:    Vercel (frontend) + Render (backend)
+VCS:           Git + GitHub
+
+USER ROLES
+----------
+1. Technician — inspects assets, submits condition reports, logs faults/repairs
+2. Supervisor — views dashboard, approves maintenance, assigns technicians
+3. Admin — manages users, generates reports, full CRUD access
+
+FOLDER STRUCTURE
+-----------------
+mcas-ict/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/            (buttons, inputs, cards - reusable primitives)
+│   │   │   ├── layout/         (sidebar, navbar, page shells)
+│   │   │   └── features/       (asset-card, inspection-form, status-badge, etc.)
+│   │   ├── pages/
+│   │   │   ├── technician/
+│   │   │   ├── supervisor/
+│   │   │   └── admin/
+│   │   ├── lib/                (supabase client, api client, dexie db)
+│   │   ├── hooks/
+│   │   ├── types/               (shared TS types + zod schemas)
+│   │   ├── utils/                (depreciation calc, status logic, etc.)
+│   │   └── routes/
+│   └── public/
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   ├── controllers/
+│   │   ├── middleware/          (auth, role-guard, validation)
+│   │   ├── services/             (business logic: depreciation, status flag)
+│   │   ├── types/
+│   │   └── config/
+│   └── prisma/ or sql/          (schema, migrations)
+└── docs/
+
+DEVELOPMENT PRINCIPLES
+------------------------
+- Backend owns all business logic (depreciation calc, status flagging,
+  scheduling). Frontend never re-implements these rules.
+- Every write endpoint validated with Zod on both frontend (pre-submit)
+  and backend (source of truth).
+- Role checks enforced server-side via middleware, never trusted from
+  frontend state alone.
+- Offline queue (Dexie) mirrors the Inspections table shape; sync
+  reconciliation happens server-side, last-write-wins per record.
+- No feature ships without: loading state, empty state, error state.
+
+BUILD ORDER (see 05_opencode_build_prompts.txt for exact staged prompts)
+--------------------------------------------------------------------------
+1. Backend scaffold + DB schema + auth middleware
+2. Asset CRUD (backend + frontend)
+3. Inspection flow (backend + frontend, online-only first)
+4. Offline queue + sync
+5. Supervisor dashboard + maintenance workflow
+6. Admin module + reports
+7. PWA polish + deployment

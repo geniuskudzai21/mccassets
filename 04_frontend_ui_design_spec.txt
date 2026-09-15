@@ -1,0 +1,98 @@
+MCAS-ICT — FRONTEND UI DESIGN SPEC
+======================================
+
+DESIGN DIRECTION
+-----------------
+Municipal/government operations tool. Audience: ICT technicians in the
+field (mobile, gloves-off quick taps) and supervisors/admins at a desk
+(dense data, scanning). This is NOT a consumer SaaS — no marketing-site
+flourishes. Think closer to a well-built internal ops dashboard: calm,
+legible, fast to scan under time pressure.
+
+HARD RULES (explicit client requirement)
+-------------------------------------------
+- Light mode only.
+- NO gradients, anywhere.
+- NO neon/saturated accent colors.
+- Must not look like a generic AI-generated template:
+  - no purple/violet-to-blue gradient headers
+  - no all-caps tracked-out eyebrow labels above every heading
+  - no identical rounded cards with the same soft drop-shadow on everything
+  - no "→" arrows appended to every button/link
+  - no single-color-with-different-opacity theming
+- Responsive: mobile-first for technician views (they're on phones in
+  the field), desktop-optimized for supervisor/admin dashboards.
+- Lucide React icons throughout (consistent stroke width, no mixing icon sets).
+
+COLOR PALETTE (named, not "primary/secondary" abstractions)
+----------------------------------------------------------------
+  --paper:        #FAFAF8   (background — off-white, not stark #FFF)
+  --ink:          #1C1C1A   (primary text — near-black, not pure black)
+  --ink-muted:    #6B6B65   (secondary text, labels)
+  --line:         #E4E2DC   (borders, dividers — visible but quiet)
+  --council-teal: #2A5C57   (brand/primary action — muted teal, not corporate blue)
+  --status-good:  #3F7D4E   (muted green)
+  --status-fair:  #B8862E   (muted amber/ochre, not bright yellow)
+  --status-poor:  #B0432F   (muted brick red, not fire-engine red)
+  --status-disposal: #8A8880 (grey)
+
+Status colors are functional, not decorative — used only on badges/icons
+that communicate asset condition, not as page accents.
+
+TYPOGRAPHY
+----------
+  Headings: Source Serif 4 or IBM Plex Serif (gives it institutional
+            weight without being a generic SaaS sans-serif)
+  Body/UI:  Inter or IBM Plex Sans (for data density, form labels, tables)
+  Data/tags: keep same sans, use weight (medium/semibold) not a
+             monospace face, for asset tags/IDs.
+
+Type scale (rem): 2.25 / 1.5 / 1.25 / 1 / 0.875
+No single-word accent coloring inside headings. No all-caps labels —
+use sentence case with color/weight for hierarchy instead.
+
+LAYOUT
+------
+Technician (mobile-first):
+  - Single column, big tap targets (min 44px)
+  - Bottom nav (not hamburger) for: Home / Scan / My Inspections / Profile
+  - Inspection form is a linear multi-step flow, not one long form —
+    reduces cognitive load in field conditions
+
+Supervisor/Admin (desktop):
+  - Fixed left sidebar (icons + labels), not a collapsible hamburger
+  - Dashboard: asset status breakdown (Recharts bar/pie, muted palette
+    matching status colors above — no rainbow charts)
+  - Assets table: dense, sortable, filter bar above (department/type/status)
+    — real data table, not cards, once >20 rows
+  - Detail views: two-column (info panel + activity timeline), not
+    everything crammed into stacked cards
+
+COMPONENTS (reusable, in components/ui/)
+--------------------------------------------
+  Button       - solid (council-teal), outline, ghost variants. No pill
+                 shape everywhere — rounded-md (6px), not rounded-full.
+  StatusBadge  - colored dot + text, not a colored pill background
+                 (avoids the "same rounded chip on everything" tell)
+  DataTable    - sortable headers, sticky header on scroll
+  Card         - used sparingly (dashboard summary tiles only), border
+                 not shadow for definition (shadow-sm max, never shadow-lg)
+  EmptyState   - icon + one sentence + action, written in plain language
+                 ("No assets match these filters" not "No data found")
+  Toast        - confirms actions in active voice ("Inspection submitted",
+                 not "Success")
+
+MOTION
+------
+One deliberate transition only: page/panel transitions (fade, 150ms).
+No hover-lift on every card, no staggered fade-ins on list load.
+Sync status indicator (offline queue) gets a subtle pulse — that's the
+one place motion carries real information.
+
+ACCESSIBILITY / QUALITY FLOOR
+---------------------------------
+- Visible keyboard focus rings (don't strip default outline without replacing)
+- Color is never the only status signal — pair with icon + text label
+- Minimum contrast: body text 4.5:1 against --paper
+- Forms: label above input, inline error text below (React Hook Form + Zod),
+  never placeholder-as-label

@@ -1,0 +1,102 @@
+MCAS-ICT — BACKEND API SPEC (Express + TypeScript)
+=====================================================
+
+AUTH
+----
+Supabase Auth issues JWTs. Backend verifies JWT on every request via
+middleware, attaches req.user = { id, role, department_id }.
+
+Middleware:
+  authenticate       -> verifies Supabase JWT, rejects if missing/invalid
+  requireRole(...roles) -> 403 if req.user.role not in allowed list
+
+ROUTES
+------
+Auth
+  GET   /api/me                        -> current user profile
+
+Departments
+  GET   /api/departments                [any authenticated]
+  POST  /api/departments                [admin]
+
+Assets
+  GET   /api/assets                     [any] filters: ?status=&department_id=&type=&q=
+  GET   /api/assets/:id                 [any]
+  POST  /api/assets                     [supervisor, admin]
+  PATCH /api/assets/:id                 [supervisor, admin]
+  DELETE /api/assets/:id                [admin]
+  GET   /api/assets/:id/history         [any] -> inspections + maintenance timeline
+
+Inspections
+  GET   /api/inspections                [supervisor, admin] filters: ?asset_id=&technician_id=
+  POST  /api/inspections                [technician] -> creates inspection,
+                                          recalculates asset.current_status,
+                                          writes audit_log entry
+  POST  /api/inspections/sync           [technician] -> BATCH endpoint for
+                                          offline queue flush; accepts array of
+                                          { client_uuid, asset_id, ...payload };
+                                          idempotent on client_uuid (upsert)
+
+Maintenance Requests
+  GET    /api/maintenance                [supervisor, admin] / technician sees own assigned
+  POST   /api/maintenance                [supervisor, admin, or auto-created by
+                                           inspection service when status = poor]
+  PATCH  /api/maintenance/:id            [supervisor, admin] -> status/assignment change
+
+Disposals
+  POST   /api/disposals                  [admin]
+  GET    /api/disposals                  [supervisor, admin]
+
+Reports
+  GET   /api/reports/summary             [supervisor, admin] -> counts by status
+  GET   /api/reports/depreciation        [admin] -> per-asset depreciation table
+  GET   /api/reports/replacement-due     [admin]
+  GET   /api/reports/export/pdf          [admin] -> triggers jsPDF generation
+                                          (can be done client-side instead —
+                                           recommend client-side to keep backend
+                                           stateless)
+
+VALIDATION
+----------
+Every POST/PATCH body validated with Zod schema shared between
+frontend/types and backend/types (keep in a shared package or duplicate
+carefully — for a single-repo project, just duplicate small schemas).
+
+Example:
+  const createInspectionSchema = z.object({
+    asset_id: z.string().uuid(),
+    status: z.enum(['good','fair','poor','disposal']),
+    notes: z.string().max(1000).optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
+    client_uuid: z.string().uuid().optional(),
+  });
+
+ERROR SHAPE (consistent across all endpoints)
+----------------------------------------------
+  { error: { code: string, message: string, details?: unknown } }
+
+Standard codes: UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR,
+CONFLICT (used for sync conflicts), INTERNAL_ERROR
+
+RATE LIMITING & SECURITY
+--------------------------
+- express-rate-limit on /api/auth-adjacent and /api/inspections/sync
+  (batch endpoint is the abuse target — cap batch size, e.g. 50/request)
+- Helmet for headers
+- CORS locked to the deployed frontend origin only
+- File uploads (photos) go directly frontend -> Supabase Storage using a
+  signed upload URL requested from backend — backend never proxies binary
+  data. Validate mime-type + max size (e.g. 5MB) server-side before
+  issuing the signed URL.
+- Never trust department_id/role from request body — always derive from
+  req.user set by auth middleware.
+
+BUSINESS LOGIC LOCATION (backend/src/services/)
+--------------------------------------------------
+  assetStatus.ts     -> recompute current_status after each inspection
+  depreciation.ts     -> pure function, called on-read in reports/asset detail
+  scheduling.ts        -> cron (node-cron) checks inspection due dates +
+                          warranty expiry, inserts notifications
+  maintenanceAuto.ts    -> auto-creates maintenance_request when inspection
+                          status = 'poor' or 'disposal'
