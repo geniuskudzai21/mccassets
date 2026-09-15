@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { Boxes } from 'lucide-react'
 import Button from '../components/ui/Button.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 
@@ -33,10 +34,31 @@ export default function HomePage() {
         )}
       </header>
 
-      <main className="px-6 py-8">
-        <p className="text-sm text-ink-muted">
-          Placeholder homepage — scaffold ready for role-based pages.
-        </p>
+      <main className="mx-auto max-w-3xl px-6 py-12">
+        {role === 'supervisor' || role === 'admin' ? (
+          <div className="space-y-3">
+            <h2 className="font-serif text-2xl font-semibold text-ink">Workspace</h2>
+            <Link
+              to="/assets"
+              className="flex items-center gap-3 rounded-md border border-line bg-paper p-4 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+            >
+              <Boxes className="h-5 w-5 text-council-teal" aria-hidden />
+              <div>
+                <p className="font-medium text-ink">Asset register</p>
+                <p className="text-sm text-ink-muted">
+                  Search, filter and manage the full asset list.
+                </p>
+              </div>
+            </Link>
+            <p className="pt-4 text-sm text-ink-muted">
+              More modules (inspections, maintenance, reports) land in upcoming builds.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-ink-muted">
+            Technician workflow (scan, inspections, offline queue) is coming in a later build.
+          </p>
+        )}
       </main>
     </div>
   )

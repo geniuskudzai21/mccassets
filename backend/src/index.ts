@@ -4,7 +4,9 @@ import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import { config } from './config/index.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import assetRouter from './routes/asset.route.js'
 import authRouter from './routes/auth.route.js'
+import departmentRouter from './routes/department.route.js'
 import healthRouter from './routes/health.route.js'
 
 const app = express()
@@ -32,6 +34,8 @@ app.get('/api', (_req, res) => {
 
 app.use('/api', healthRouter)
 app.use('/api', authRouter)
+app.use('/api/departments', departmentRouter)
+app.use('/api/assets', assetRouter)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
