@@ -1,0 +1,302 @@
+// =============================================================================
+// MCAS-ICT — Database types
+// Generated from 02_database_schema.txt
+// Compatible with @supabase/supabase-js v2+
+// =============================================================================
+
+export type UserRole = 'technician' | 'supervisor' | 'admin'
+export type AssetStatus = 'good' | 'fair' | 'poor' | 'disposal'
+export type AssetType =
+  | 'cpu'
+  | 'monitor'
+  | 'keyboard'
+  | 'mouse'
+  | 'laptop'
+  | 'printer'
+  | 'router'
+  | 'projector'
+  | 'server'
+  | 'ups'
+  | 'other'
+export type RequestStatus = 'pending' | 'approved' | 'in_progress' | 'completed' | 'rejected'
+export type SyncStatus = 'synced' | 'pending' | 'conflict'
+
+// ---- Row / Insert / Update types per table ----------------------------------
+
+export interface Department {
+  Row: {
+    id: string
+    name: string
+    location: string | null
+    created_at: string
+  }
+  Insert: {
+    id?: string
+    name: string
+    location?: string | null
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    name?: string
+    location?: string | null
+    created_at?: string
+  }
+}
+
+export interface Profile {
+  Row: {
+    id: string
+    full_name: string
+    role: UserRole
+    department_id: string | null
+    phone: string | null
+    created_at: string
+  }
+  Insert: {
+    id: string
+    full_name: string
+    role?: UserRole
+    department_id?: string | null
+    phone?: string | null
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    full_name?: string
+    role?: UserRole
+    department_id?: string | null
+    phone?: string | null
+    created_at?: string
+  }
+}
+
+export interface Asset {
+  Row: {
+    id: string
+    asset_tag: string
+    type: AssetType
+    parent_asset_id: string | null
+    brand: string | null
+    model: string | null
+    serial_number: string | null
+    department_id: string | null
+    assigned_user: string | null
+    purchase_date: string
+    purchase_cost: number
+    useful_life_years: number
+    current_status: AssetStatus
+    last_lat: number | null
+    last_lng: number | null
+    building: string | null
+    room: string | null
+    warranty_expiry: string | null
+    created_at: string
+    updated_at: string
+  }
+  Insert: {
+    id?: string
+    asset_tag: string
+    type: AssetType
+    parent_asset_id?: string | null
+    brand?: string | null
+    model?: string | null
+    serial_number?: string | null
+    department_id?: string | null
+    assigned_user?: string | null
+    purchase_date: string
+    purchase_cost: number
+    useful_life_years?: number
+    current_status?: AssetStatus
+    last_lat?: number | null
+    last_lng?: number | null
+    building?: string | null
+    room?: string | null
+    warranty_expiry?: string | null
+    created_at?: string
+    updated_at?: string
+  }
+  Update: {
+    id?: string
+    asset_tag?: string
+    type?: AssetType
+    parent_asset_id?: string | null
+    brand?: string | null
+    model?: string | null
+    serial_number?: string | null
+    department_id?: string | null
+    assigned_user?: string | null
+    purchase_date?: string
+    purchase_cost?: number
+    useful_life_years?: number
+    current_status?: AssetStatus
+    last_lat?: number | null
+    last_lng?: number | null
+    building?: string | null
+    room?: string | null
+    warranty_expiry?: string | null
+    created_at?: string
+    updated_at?: string
+  }
+}
+
+export interface Inspection {
+  Row: {
+    id: string
+    asset_id: string
+    technician_id: string
+    status: AssetStatus
+    notes: string | null
+    photo_urls: string[] | null
+    lat: number | null
+    lng: number | null
+    client_uuid: string | null
+    sync_status: SyncStatus
+    inspected_at: string
+    created_at: string
+  }
+  Insert: {
+    id?: string
+    asset_id: string
+    technician_id: string
+    status: AssetStatus
+    notes?: string | null
+    photo_urls?: string[] | null
+    lat?: number | null
+    lng?: number | null
+    client_uuid?: string | null
+    sync_status?: SyncStatus
+    inspected_at?: string
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    asset_id?: string
+    technician_id?: string
+    status?: AssetStatus
+    notes?: string | null
+    photo_urls?: string[] | null
+    lat?: number | null
+    lng?: number | null
+    client_uuid?: string | null
+    sync_status?: SyncStatus
+    inspected_at?: string
+    created_at?: string
+  }
+}
+
+export interface MaintenanceRequest {
+  Row: {
+    id: string
+    asset_id: string
+    raised_by: string | null
+    assigned_to: string | null
+    status: RequestStatus
+    description: string
+    estimated_cost: number | null
+    created_at: string
+    resolved_at: string | null
+  }
+  Insert: {
+    id?: string
+    asset_id: string
+    raised_by?: string | null
+    assigned_to?: string | null
+    status?: RequestStatus
+    description: string
+    estimated_cost?: number | null
+    created_at?: string
+    resolved_at?: string | null
+  }
+  Update: {
+    id?: string
+    asset_id?: string
+    raised_by?: string | null
+    assigned_to?: string | null
+    status?: RequestStatus
+    description?: string
+    estimated_cost?: number | null
+    created_at?: string
+    resolved_at?: string | null
+  }
+}
+
+export interface Disposal {
+  Row: {
+    id: string
+    asset_id: string
+    disposed_by: string | null
+    reason: string
+    disposal_date: string
+    approved_by: string | null
+  }
+  Insert: {
+    id?: string
+    asset_id: string
+    disposed_by?: string | null
+    reason: string
+    disposal_date?: string
+    approved_by?: string | null
+  }
+  Update: {
+    id?: string
+    asset_id?: string
+    disposed_by?: string | null
+    reason?: string
+    disposal_date?: string
+    approved_by?: string | null
+  }
+}
+
+export interface AuditLog {
+  Row: {
+    id: string
+    user_id: string | null
+    action: string
+    entity_type: string
+    entity_id: string
+    metadata: Record<string, unknown> | null
+    created_at: string
+  }
+  Insert: {
+    id?: string
+    user_id?: string | null
+    action: string
+    entity_type: string
+    entity_id: string
+    metadata?: Record<string, unknown> | null
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    user_id?: string | null
+    action?: string
+    entity_type?: string
+    entity_id?: string
+    metadata?: Record<string, unknown> | null
+    created_at?: string
+  }
+}
+
+// ---- Supabase Database type (supabase-js compatible) -----------------------
+
+export interface Database {
+  public: {
+    Tables: {
+      departments: Department
+      profiles: Profile
+      assets: Asset
+      inspections: Inspection
+      maintenance_requests: MaintenanceRequest
+      disposals: Disposal
+      audit_log: AuditLog
+    }
+    Enums: {
+      user_role: UserRole
+      asset_status: AssetStatus
+      asset_type: AssetType
+      request_status: RequestStatus
+      sync_status: SyncStatus
+    }
+  }
+}
