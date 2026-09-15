@@ -1,9 +1,15 @@
 import type { Request, Response } from 'express'
 import { getSupabase } from '../config/supabase.js'
 import { HttpError } from '../middleware/errorHandler.js'
-import { createInspectionSchema, inspectionQuerySchema } from '../schemas/inspection.schema.js'
+import {
+  createInspectionSchema,
+  inspectionQuerySchema,
+  syncInspectionsSchema,
+} from '../schemas/inspection.schema.js'
 import { applyInspectionResult } from '../services/assetStatus.js'
 import type { Inspection } from '../types/db.js'
+
+const MAX_SYNC_BATCH = 50
 
 type InspectionRow = Inspection['Row']
 
@@ -89,4 +95,78 @@ export async function createInspection(req: Request, res: Response) {
   })
 
   res.status(201).json({ data: inspection as InspectionRow })
+}
+
+/**
+ * Batch upsert for offline queue flush. Idempotent on client_uuid: items that
+ * already exist for that key are skipped rather than applied twice. Batch is
+ * capped server-side, regardless of what the client sends.
+ */
+export async function syncInspections(req: Request, res: Response) {
+  const technicianId = req.user?.id
+  if (!technicianId) {
+    throw new HttpError(401, 'Authentication required')
+  }
+
+  const { inspections: items } = syncInspectionsSchema.parse(req.body)
+  const batch = items.slice(0, MAX_SYNC_BATCH)
+
+  const supabase = getSupabase()
+  const syncedUuids: string[] = []
+  const inspections: InspectionRow[] = []
+
+  for (const item of batch) {
+    const { data: existing } = await supabase
+      .from('inspections')
+      .select('id')
+      .eq('client_uuid', item.client_uuid)
+      .maybeSingle()
+
+    if (existing) {
+      syncedUuids.push(item.client_uuid)
+      continue
+    }
+
+    const { data: inspection, error } = await supabase
+      .from('inspections')
+      .insert({
+        asset_id: item.asset_id,
+        technician_id: technicianId,
+        status: item.status,
+        notes: item.notes ?? null,
+        photo_urls: item.photo_urls ?? null,
+        lat: item.lat ?? null,
+        lng: item.lng ?? null,
+        client_uuid: item.client_uuid,
+        sync_status: 'synced',
+      })
+      .select('*')
+      .single()
+
+    if (error) {
+      if (error.code === '23505') {
+        syncedUuids.push(item.client_uuid)
+        continue
+      }
+      throw new HttpError(500, 'Failed to sync inspections')
+    }
+
+    await applyInspectionResult({
+      assetId: item.asset_id,
+      inspectionId: inspection.id,
+      status: item.status,
+      technicianId,
+    })
+
+    syncedUuids.push(item.client_uuid)
+    inspections.push(inspection as InspectionRow)
+  }
+
+  res.json({
+    data: {
+      processed: syncedUuids.length,
+      client_uuids: syncedUuids,
+      inspections,
+    },
+  })
 }

@@ -21,6 +21,8 @@ import { StatusBadge } from '../../components/ui/StatusBadge.tsx'
 import { useAuth } from '../../hooks/useAuth.ts'
 import { useQrScanner } from '../../hooks/useQrScanner.ts'
 import { api, apiPost } from '../../lib/api.ts'
+import { queueInspection } from '../../lib/sync.ts'
+import { uploadPhotoBlob } from '../../lib/uploads.ts'
 import { assetTypeLabel } from '../../types/asset.ts'
 import type { AssetListResponse, AssetRow } from '../../types/asset.ts'
 import type { AssetStatus } from '../../types/db.ts'
@@ -39,13 +41,6 @@ const conditionOptions: {
   { status: 'poor', label: 'Poor', icon: CircleX, description: 'Failing, needs attention' },
   { status: 'disposal', label: 'Disposal', icon: Circle, description: 'Beyond economic repair' },
 ]
-
-interface UploadSignResponse {
-  signedUrl: string
-  token: string
-  path: string
-  publicUrl: string
-}
 
 const readFile = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -74,6 +69,7 @@ export default function InspectionFlowPage() {
   const [capturingGps, setCapturingGps] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submittedOffline, setSubmittedOffline] = useState(false)
   const [done, setDone] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -152,44 +148,43 @@ export default function InspectionFlowPage() {
     )
   }
 
-  async function uploadPhoto(file: File): Promise<string> {
-    const signResult = await apiPost<UploadSignResponse>('/api/uploads/sign', {
-      filename: file.name,
-      contentType: file.type || 'image/jpeg',
-      size: file.size,
-    })
-    const response = await fetch(signResult.signedUrl, {
-      method: 'PUT',
-      headers: { 'content-type': file.type || 'image/jpeg', 'x-upsert': 'false' },
-      body: file,
-    })
-    if (!response.ok) {
-      throw new Error('Photo upload failed')
-    }
-    return signResult.publicUrl
-  }
-
   async function submitInspection() {
     if (!asset || !status || !user) return
     setSubmitting(true)
     setSubmitError(null)
     try {
-      const photoUrls: string[] = []
-      for (const file of photos) {
-        photoUrls.push(await uploadPhoto(file))
+      if (navigator.onLine) {
+        const photoUrls: string[] = []
+        for (const file of photos) {
+          photoUrls.push(await uploadPhotoBlob(file, file.type || 'image/jpeg'))
+        }
+        await apiPost<{ data: InspectionRow }>('/api/inspections', {
+          asset_id: asset.id,
+          status,
+          notes: notes.trim() || undefined,
+          photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
+          lat: location?.lat,
+          lng: location?.lng,
+        })
+      } else {
+        throw new Error('offline')
       }
-      await apiPost<{ data: InspectionRow }>('/api/inspections', {
+      setSubmittedOffline(false)
+      setDone(true)
+      setStep(4)
+    } catch {
+      await queueInspection({
         asset_id: asset.id,
         status,
         notes: notes.trim() || undefined,
-        photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
         lat: location?.lat,
         lng: location?.lng,
+        photos: photos.map((file) => ({ blob: file, contentType: file.type || 'image/jpeg' })),
       })
+      setSubmittedOffline(true)
       setDone(true)
       setStep(4)
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not submit the inspection.')
+    } finally {
       setSubmitting(false)
     }
   }
@@ -222,10 +217,17 @@ export default function InspectionFlowPage() {
     return (
       <div className="px-4 py-10 text-center">
         <CircleCheck className="mx-auto h-12 w-12 text-status-good" aria-hidden />
-        <h2 className="mt-4 font-serif text-xl font-semibold text-ink">Inspection submitted</h2>
+        <h2 className="mt-4 font-serif text-xl font-semibold text-ink">
+          {submittedOffline ? 'Saved to this device' : 'Inspection submitted'}
+        </h2>
         <p className="mt-2 text-sm text-ink-muted">
           {asset?.asset_tag} recorded as <span className="capitalize">{status}</span>.
         </p>
+        {submittedOffline ? (
+          <p className="mx-auto mt-3 max-w-xs rounded-md border border-council-teal/30 bg-council-teal/10 px-3 py-2 text-sm text-council-teal">
+            No connection right now — it will sync automatically when you&rsquo;re back online.
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-col gap-3">
           <Button onClick={() => navigate('/scan')}>Scan another asset</Button>
           <Button variant="outline" onClick={() => navigate('/my-inspections')}>
