@@ -1,9 +1,13 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import HomePage from '../pages/HomePage.tsx'
 import LoginPage from '../pages/LoginPage.tsx'
 import AssetsPage from '../pages/AssetsPage.tsx'
 import AssetDetailPage from '../pages/AssetDetailPage.tsx'
 import AssetFormPage from '../pages/AssetFormPage.tsx'
+import InspectionFlowPage from '../pages/technician/InspectionFlowPage.tsx'
+import MyInspectionsPage from '../pages/technician/MyInspectionsPage.tsx'
+import ProfilePage from '../pages/technician/ProfilePage.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 import type { ReactNode } from 'react'
 import type { UserRole } from '../types/db.ts'
@@ -45,11 +49,47 @@ function RequireRole({ roles, children }: { roles: UserRole[]; children: ReactNo
   return children
 }
 
+function TechnicianRoute({ children }: { children: ReactNode }) {
+  return (
+    <RequireAuth>
+      <RequireRole roles={['technician']}>
+        <TechnicianLayout>{children}</TechnicianLayout>
+      </RequireRole>
+    </RequireAuth>
+  )
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
+
+      <Route
+        path="/scan"
+        element={
+          <TechnicianRoute>
+            <InspectionFlowPage />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path="/my-inspections"
+        element={
+          <TechnicianRoute>
+            <MyInspectionsPage />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <TechnicianRoute>
+            <ProfilePage />
+          </TechnicianRoute>
+        }
+      />
+
       <Route
         path="/assets"
         element={

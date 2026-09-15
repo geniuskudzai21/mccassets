@@ -1,6 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom'
-import { Boxes } from 'lucide-react'
+import { Boxes, ScanLine } from 'lucide-react'
 import Button from '../components/ui/Button.tsx'
+import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 
 export default function HomePage() {
@@ -12,6 +13,26 @@ export default function HomePage() {
       <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
         Loading…
       </div>
+    )
+  }
+
+  if (user && role === 'technician') {
+    return (
+      <TechnicianLayout>
+        <div className="px-4 py-5">
+          <h2 className="font-serif text-xl font-semibold text-ink">Ready to inspect?</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Scan an asset QR code to record its condition, photos and GPS location.
+          </p>
+          <Link
+            to="/scan"
+            className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-council-teal px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-council-teal/90 focus:outline-none focus:ring-2 focus:ring-council-teal focus:ring-offset-1"
+          >
+            <ScanLine className="h-5 w-5" aria-hidden />
+            Start inspection
+          </Link>
+        </div>
+      </TechnicianLayout>
     )
   }
 

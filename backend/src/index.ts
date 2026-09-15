@@ -8,6 +8,7 @@ import assetRouter from './routes/asset.route.js'
 import authRouter from './routes/auth.route.js'
 import departmentRouter from './routes/department.route.js'
 import healthRouter from './routes/health.route.js'
+import { inspectionRouter, uploadRouter } from './routes/inspection.route.js'
 
 const app = express()
 
@@ -36,6 +37,8 @@ app.use('/api', healthRouter)
 app.use('/api', authRouter)
 app.use('/api/departments', departmentRouter)
 app.use('/api/assets', assetRouter)
+app.use('/api/inspections', inspectionRouter)
+app.use('/api/uploads', uploadRouter)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
