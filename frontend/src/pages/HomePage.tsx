@@ -55,8 +55,16 @@ export default function HomePage() {
     )
   }
 
-  if (user) {
+  if (user && (role === 'supervisor' || role === 'admin')) {
     return <Navigate to="/dashboard" replace />
+  }
+
+  if (user && role === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
+        Loading your workspace…
+      </div>
+    )
   }
 
   return (
@@ -102,7 +110,7 @@ export default function HomePage() {
 
           <div className="mx-auto">
             <div className="relative flex h-40 w-40 items-center justify-center rounded-full border border-line sm:h-48 sm:w-48">
-              <LogoMark size={96} className="ring-0" />
+              <LogoMark size={96} ringless />
               <span className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-council-teal text-xs font-semibold text-white">
                 ICT
               </span>

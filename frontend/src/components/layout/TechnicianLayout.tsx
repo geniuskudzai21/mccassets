@@ -28,7 +28,7 @@ export default function TechnicianLayout({ children }: { children: ReactNode }) 
       <div className="mx-auto max-w-md pb-20">
         <header className="flex items-center justify-between border-b border-line bg-paper px-4 py-3">
           <p className="flex items-center gap-2 font-serif text-lg font-semibold">
-            <LogoMark size={28} className="ring-0" />
+            <LogoMark size={28} ringless />
             MCAS-ICT
           </p>
           <SyncStatusIndicator />

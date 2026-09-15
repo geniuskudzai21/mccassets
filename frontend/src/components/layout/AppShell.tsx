@@ -30,7 +30,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           to="/"
           className="flex items-center gap-2.5 px-5 py-5 focus:outline-none focus:ring-2 focus:ring-council-teal"
         >
-          <LogoMark size={38} className="ring-0" />
+          <LogoMark size={38} ringless />
           <span className="font-serif text-lg font-semibold tracking-tight">MCAS-ICT</span>
         </Link>
 
