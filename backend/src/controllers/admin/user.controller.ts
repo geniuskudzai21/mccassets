@@ -108,6 +108,96 @@ export async function inviteUser(req: Request, res: Response) {
   res.status(201).json({ data: profile as ProfileRow })
 }
 
+export async function deleteUser(req: Request, res: Response) {
+  const id = userIdParam(req)
+  const supabase = getSupabase()
+  const actorId = req.user?.id
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (fetchError) {
+    throw new HttpError(500, 'Failed to load user')
+  }
+  if (!existing) {
+    throw new HttpError(404, 'User not found')
+  }
+
+  if (id === actorId) {
+    throw new HttpError(400, 'You cannot delete your own account')
+  }
+
+  if (existing.role === 'admin') {
+    const { count, error: countError } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'admin')
+      .eq('is_active', true)
+
+    if (countError) {
+      throw new HttpError(500, 'Failed to check remaining admins')
+    }
+    if (count !== null && count <= 1) {
+      throw new HttpError(400, 'Cannot delete the last active admin')
+    }
+  }
+
+  const { error: inspectionError } = await supabase
+    .from('inspections')
+    .delete()
+    .eq('technician_id', id)
+  if (inspectionError) {
+    throw new HttpError(500, 'Failed to remove the user\'s inspections')
+  }
+
+  const { error: maintenanceError } = await supabase
+    .from('maintenance_requests')
+    .update({ raised_by: null, assigned_to: null })
+    .or(`raised_by.eq.${id},assigned_to.eq.${id}`)
+  if (maintenanceError) {
+    throw new HttpError(500, 'Failed to detach the user\'s maintenance requests')
+  }
+
+  const { error: disposalError } = await supabase
+    .from('disposals')
+    .update({ disposed_by: null, approved_by: null })
+    .or(`disposed_by.eq.${id},approved_by.eq.${id}`)
+  if (disposalError) {
+    throw new HttpError(500, 'Failed to detach the user\'s disposals')
+  }
+
+  const { error: auditError } = await supabase
+    .from('audit_log')
+    .update({ user_id: null })
+    .eq('user_id', id)
+  if (auditError) {
+    throw new HttpError(500, 'Failed to clear the user\'s audit trail')
+  }
+
+  const { error: profileError } = await supabase.from('profiles').delete().eq('id', id)
+  if (profileError) {
+    throw new HttpError(500, 'Failed to delete user profile')
+  }
+
+  const { error: authError } = await supabase.auth.admin.deleteUser(id)
+  if (authError) {
+    throw new HttpError(500, 'User profile deleted but auth account could not be removed')
+  }
+
+  await supabase.from('audit_log').insert({
+    user_id: actorId,
+    action: 'user.delete',
+    entity_type: 'profiles',
+    entity_id: id,
+    metadata: { email: existing.email ?? null, role: existing.role },
+  })
+
+  res.status(204).end()
+}
+
 export async function updateUser(req: Request, res: Response) {
   const id = userIdParam(req)
   const body = updateUserSchema.parse(req.body)

@@ -33,7 +33,11 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set('Authorization', `Bearer ${session.access_token}`)
   }
 
-  const response = await fetch(`${API_BASE}${path}`, { ...init, headers })
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers,
+    signal: AbortSignal.timeout(20000),
+  })
 
   if (!response.ok) {
     let body: { error?: ApiErrorShape } | undefined

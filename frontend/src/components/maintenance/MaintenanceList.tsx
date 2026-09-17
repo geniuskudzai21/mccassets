@@ -38,6 +38,7 @@ interface User {
 export function MaintenanceList() {
   const [requests, setRequests] = useState<MaintenanceRequestRow[]>([])
   const [technicians, setTechnicians] = useState<User[]>([])
+  const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -52,11 +53,13 @@ export function MaintenanceList() {
         if (active) {
           setRequests(maintenance.data)
           setTechnicians(users.data)
+          setLoaded(true)
           setError(null)
         }
       })
       .catch((err: unknown) => {
         if (active) {
+          setLoaded(true)
           setError(err instanceof Error ? err.message : 'Could not load maintenance requests.')
         }
       })
@@ -81,7 +84,7 @@ export function MaintenanceList() {
     }
   }
 
-  const loading = requests.length === 0 && error === null
+  const loading = !loaded && error === null
 
   function actionButtons(request: MaintenanceRequestRow) {
     const disabled = busyId === request.id
@@ -170,9 +173,18 @@ export function MaintenanceList() {
       {loading ? (
         <p className="text-sm text-ink-muted">Loading maintenance requests…</p>
       ) : error ? (
-        <p role="alert" className="text-sm text-status-poor">
-          {error}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p role="alert" className="text-sm text-status-poor">
+            {error}
+          </p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+          >
+            Retry
+          </button>
+        </div>
       ) : requests.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-line p-8 text-center">
           <Wrench className="h-6 w-6 text-ink-muted" aria-hidden />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import { AdminPageShell } from '../../components/admin/AdminPageShell.tsx'
-import { apiGet, apiPatch, apiPost } from '../../lib/api.ts'
+import { apiDelete, apiGet, apiPatch, apiPost } from '../../lib/api.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
 import type { UserRole } from '../../types/db.ts'
 import type { DepartmentRow } from '../../types/asset.ts'
@@ -117,6 +117,7 @@ export default function UsersPage() {
     setError(null)
     try {
       const patch: Partial<ManagedUser> = {}
+      if (user.full_name !== undefined) patch.full_name = user.full_name
       if (user.role !== undefined) patch.role = user.role
       if (user.department_id !== undefined) patch.department_id = user.department_id
       if (user.phone !== undefined) patch.phone = user.phone || null
@@ -135,6 +136,23 @@ export default function UsersPage() {
       load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not change activation.')
+    }
+  }
+
+  async function deleteUser(user: ManagedUser) {
+    if (
+      !window.confirm(
+        `Delete ${user.full_name} (${user.email ?? 'no email'})?\n\nTheir inspections are removed and login access is revoked. This cannot be undone.`,
+      )
+    ) {
+      return
+    }
+    setError(null)
+    try {
+      await apiDelete(`/api/admin/users/${user.id}`)
+      load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete the user.')
     }
   }
 
@@ -171,7 +189,7 @@ export default function UsersPage() {
           onSubmit={(event) => void submitInvite(event)}
           className="mb-6 rounded-md border border-line bg-paper p-5"
         >
-          <h2 className="font-serif text-lg font-semibold text-ink">Invite a new user</h2>
+          <h2 className="font-serif text-lg font-semibold text-ink">Add a new user</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-ink">
               Full name
@@ -193,7 +211,7 @@ export default function UsersPage() {
               />
             </label>
             <label className="block text-sm font-medium text-ink">
-              Temporary password
+              Password
               <input
                 required
                 type="password"
@@ -252,7 +270,7 @@ export default function UsersPage() {
               disabled={inviting}
               className="rounded-md bg-council-teal px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-council-teal/90 focus:outline-none focus:ring-2 focus:ring-council-teal focus:ring-offset-1 disabled:opacity-50"
             >
-              {inviting ? 'Inviting…' : 'Invite'}
+              {inviting ? 'Adding…' : 'Add user'}
             </button>
           </div>
         </form>
@@ -312,11 +330,43 @@ export default function UsersPage() {
                       {user.is_active ? 'Deactivate' : 'Activate'}
                     </button>
                   ) : null}
+                  {!isSelf ? (
+                    <button
+                      type="button"
+                      onClick={() => void deleteUser(user)}
+                      className="rounded-md border border-status-poor/40 px-3 py-1.5 text-sm font-medium text-status-poor transition-colors hover:bg-status-poor/10 focus:outline-none focus:ring-2 focus:ring-status-poor"
+                    >
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
               {editing ? (
-                <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-3">
+                <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+                  <label className="block text-sm font-medium text-ink">
+                    Full name
+                    <input
+                      value={user.full_name}
+                      onChange={(event) =>
+                        updateLocalUser(user.id, { full_name: event.target.value })
+                      }
+                      className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal"
+                    />
+                  </label>
+                  <label className="block text-sm font-medium text-ink">
+                    Email (sign-in)
+                    <input
+                      type="email"
+                      disabled
+                      value={user.email ?? ''}
+                      placeholder="No email recorded"
+                      className="mt-1 w-full cursor-not-allowed rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink opacity-70 placeholder:text-ink-muted"
+                    />
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      Email is the sign-in and cannot be changed here.
+                    </span>
+                  </label>
                   <label className="block text-sm font-medium text-ink">
                     Role
                     <select
@@ -356,6 +406,16 @@ export default function UsersPage() {
                       className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal"
                     />
                   </label>
+                  <div className="block text-sm font-medium text-ink">
+                    Created
+                    <p className="mt-1 rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink-muted">
+                      {new Date(user.created_at).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </div>
                 </div>
               ) : null}
             </li>
