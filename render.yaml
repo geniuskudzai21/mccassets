@@ -1,20 +1,18 @@
 # Render blueprint — deploys the backend service.
-# Point Render at this repo; it builds the `backend` workspace and serves the API.
+# This is an npm-workspaces monorepo: the lockfile lives at the repo root, so
+# install/build/start run at the root and target the `backend` workspace.
 # Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CORS_ORIGIN in the dashboard.
 
 services:
   - type: web
     name: mcas-ict-backend
     runtime: node
-    rootDir: backend
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
+    buildCommand: npm ci && npm run build --workspace backend
+    startCommand: npm run start --workspace backend
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
