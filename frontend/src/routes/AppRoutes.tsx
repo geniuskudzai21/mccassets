@@ -9,13 +9,30 @@ import AssetFormPage from '../pages/AssetFormPage.tsx'
 import InspectionFlowPage from '../pages/technician/InspectionFlowPage.tsx'
 import MyInspectionsPage from '../pages/technician/MyInspectionsPage.tsx'
 import ProfilePage from '../pages/technician/ProfilePage.tsx'
-import DashboardPage from '../pages/supervisor/DashboardPage.tsx'
+import SupervisorDashboardPage from '../pages/supervisor/DashboardPage.tsx'
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage.tsx'
 import UsersPage from '../pages/admin/UsersPage.tsx'
 import DisposalsPage from '../pages/admin/DisposalsPage.tsx'
 import ReportsPage from '../pages/admin/ReportsPage.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 import type { ReactNode } from 'react'
 import type { UserRole } from '../types/db.ts'
+
+function RoleDashboardRedirect() {
+  const { role, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
+        Loading…
+      </div>
+    )
+  }
+
+  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />
+  if (role === 'supervisor') return <Navigate to="/supervisor/dashboard" replace />
+  return <Navigate to="/" replace />
+}
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -72,9 +89,23 @@ export default function AppRoutes() {
 
       <Route
         path="/dashboard"
+        element={<RoleDashboardRedirect />}
+      />
+
+      <Route
+        path="/admin/dashboard"
         element={
-          <WorkspaceShell roles={['supervisor', 'admin']}>
-            <DashboardPage />
+          <WorkspaceShell roles={['admin']}>
+            <AdminDashboardPage />
+          </WorkspaceShell>
+        }
+      />
+
+      <Route
+        path="/supervisor/dashboard"
+        element={
+          <WorkspaceShell roles={['supervisor']}>
+            <SupervisorDashboardPage />
           </WorkspaceShell>
         }
       />

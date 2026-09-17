@@ -29,6 +29,12 @@ const NAV: NavItem[] = [
   { to: '/admin/reports', label: 'Reports', icon: FileBarChart, adminOnly: true },
 ]
 
+function dashboardPath(role: UserRole | null): string {
+  if (role === 'admin') return '/admin/dashboard'
+  if (role === 'supervisor') return '/supervisor/dashboard'
+  return '/dashboard'
+}
+
 function NavLinks({ role, onNavigate }: { role: UserRole | null; onNavigate?: () => void }) {
   const items = NAV.filter((item) => !item.adminOnly || role === 'admin')
   return (
@@ -36,8 +42,8 @@ function NavLinks({ role, onNavigate }: { role: UserRole | null; onNavigate?: ()
       {items.map(({ to, label, icon: Icon, adminOnly }) => (
         <NavLink
           key={to}
-          to={to}
-          end={to === '/dashboard'}
+          to={label === 'Dashboard' ? dashboardPath(role) : to}
+          end={label === 'Dashboard'}
           onClick={onNavigate}
           className={({ isActive }) =>
             `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-council-teal ${

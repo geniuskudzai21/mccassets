@@ -55,8 +55,12 @@ export default function HomePage() {
     )
   }
 
-  if (user && (role === 'supervisor' || role === 'admin')) {
-    return <Navigate to="/dashboard" replace />
+  if (user && role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />
+  }
+
+  if (user && role === 'supervisor') {
+    return <Navigate to="/supervisor/dashboard" replace />
   }
 
   if (user && role === null) {
