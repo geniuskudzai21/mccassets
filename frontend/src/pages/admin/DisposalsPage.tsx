@@ -37,6 +37,7 @@ interface AssetOption {
 export default function DisposalsPage() {
   const [disposals, setDisposals] = useState<DisposalRow[]>([])
   const [assets, setAssets] = useState<AssetOption[]>([])
+  const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -51,9 +52,11 @@ export default function DisposalsPage() {
       .then(([disposalResult, assetResult]) => {
         setDisposals(disposalResult.data)
         setAssets(assetResult.data)
+        setLoaded(true)
         setError(null)
       })
       .catch((err: unknown) => {
+        setLoaded(true)
         setError(err instanceof Error ? err.message : 'Could not load disposals.')
       })
   }
@@ -68,10 +71,12 @@ export default function DisposalsPage() {
         if (active) {
           setDisposals(disposalResult.data)
           setAssets(assetResult.data)
+          setLoaded(true)
         }
       })
       .catch((err: unknown) => {
         if (active) {
+          setLoaded(true)
           setError(err instanceof Error ? err.message : 'Could not load disposals.')
         }
       })
@@ -242,7 +247,13 @@ export default function DisposalsPage() {
         })}
       </ul>
 
-      {disposals.length === 0 ? (
+      {!loaded && error === null ? (
+        <p className="rounded-md border border-dashed border-line p-8 text-center text-sm text-ink-muted">
+          Loading disposals…
+        </p>
+      ) : null}
+
+      {loaded && error === null && disposals.length === 0 ? (
         <p className="rounded-md border border-dashed border-line p-8 text-center text-sm text-ink-muted">
           No disposals recorded yet.
         </p>

@@ -84,7 +84,8 @@ export function useAsset(id: string | undefined) {
 }
 
 export function useAssetHistory(id: string | undefined) {
-  const [timeline, setTimeline] = useState<AssetTimelineItem[]>([])
+  const [timeline, setTimeline] = useState<AssetTimelineItem[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -92,10 +93,15 @@ export function useAssetHistory(id: string | undefined) {
 
     api<{ data: AssetTimelineItem[] }>(`/api/assets/${id}/history`)
       .then((result) => {
-        if (active) setTimeline(result.data)
+        if (active) {
+          setTimeline(result.data)
+          setError(null)
+        }
       })
-      .catch(() => {
-        /* history is secondary; leave empty on failure */
+      .catch((err: unknown) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Could not load activity.')
+        }
       })
 
     return () => {
@@ -103,7 +109,9 @@ export function useAssetHistory(id: string | undefined) {
     }
   }, [id])
 
-  return { timeline }
+  const loading = timeline === null && error === null
+
+  return { timeline, loading, error }
 }
 
 export function useDepartments() {

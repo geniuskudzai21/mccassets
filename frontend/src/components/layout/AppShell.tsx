@@ -39,7 +39,7 @@ function NavLinks({ role, onNavigate }: { role: UserRole | null; onNavigate?: ()
   const items = NAV.filter((item) => !item.adminOnly || role === 'admin')
   return (
     <nav className="mt-2 flex flex-1 flex-col gap-1 px-3">
-      {items.map(({ to, label, icon: Icon, adminOnly }) => (
+      {items.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
           to={label === 'Dashboard' ? dashboardPath(role) : to}
@@ -55,11 +55,6 @@ function NavLinks({ role, onNavigate }: { role: UserRole | null; onNavigate?: ()
         >
           <Icon className="h-4 w-4 shrink-0" aria-hidden />
           {label}
-          {adminOnly ? (
-            <span className="ml-auto rounded-full border border-line px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
-              Admin
-            </span>
-          ) : null}
         </NavLink>
       ))}
     </nav>

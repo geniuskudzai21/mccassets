@@ -10,16 +10,21 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      injectRegister: null,
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'MCAS-ICT',
+        id: '/',
+        name: 'MCAS-ICT — ICT Asset Management',
         short_name: 'MCAS-ICT',
         description: 'ICT Asset Management System for Mutare City Council',
-        theme_color: '#fafaf8',
-        background_color: '#fafaf8',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
         display: 'standalone',
+        display_override: ['standalone', 'minimal-ui'],
         start_url: '/',
         scope: '/',
+        lang: 'en',
+        categories: ['productivity', 'utilities'],
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -32,15 +37,38 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-512x512-maskable.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable',
+            purpose: 'maskable',
           },
         ],
       },
       workbox: {
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-css',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-files',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

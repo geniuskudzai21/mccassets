@@ -32,6 +32,7 @@ export default function UsersPage() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<ManagedUser[]>([])
   const [departments, setDepartments] = useState<DepartmentRow[]>([])
+  const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [showInvite, setShowInvite] = useState(false)
@@ -54,9 +55,11 @@ export default function UsersPage() {
       .then(([userResult, deptResult]) => {
         setUsers(userResult.data)
         setDepartments(deptResult.data)
+        setLoaded(true)
         setError(null)
       })
       .catch((err: unknown) => {
+        setLoaded(true)
         setError(err instanceof Error ? err.message : 'Could not load users.')
       })
   }
@@ -71,10 +74,13 @@ export default function UsersPage() {
         if (active) {
           setUsers(userResult.data)
           setDepartments(deptResult.data)
+          setLoaded(true)
+          setError(null)
         }
       })
       .catch((err: unknown) => {
         if (active) {
+          setLoaded(true)
           setError(err instanceof Error ? err.message : 'Could not load users.')
         }
       })
@@ -423,7 +429,13 @@ export default function UsersPage() {
         })}
       </ul>
 
-      {users.length === 0 ? (
+      {!loaded && error === null ? (
+        <p className="rounded-md border border-dashed border-line p-8 text-center text-sm text-ink-muted">
+          Loading users…
+        </p>
+      ) : null}
+
+      {loaded && users.length === 0 && error === null ? (
         <p className="rounded-md border border-dashed border-line p-8 text-center text-sm text-ink-muted">
           No users yet.
         </p>

@@ -165,43 +165,49 @@ export default function ReportsPage() {
         <section className="mt-4 rounded-md border border-line bg-paper p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="font-serif text-lg font-semibold text-ink">Depreciation table</h2>
-            <p className="text-sm text-ink-muted tabular-nums">
-              Book value {formatCurrency(summary?.total_value ?? 0)} · Depreciated{' '}
-              {formatCurrency(depreciation.reduce((sum, row) => sum + row.current_value, 0))}
-            </p>
+            {depreciation.length > 0 ? (
+              <p className="text-sm text-ink-muted tabular-nums">
+                Book value {formatCurrency(summary?.total_value ?? 0)} · Depreciated{' '}
+                {formatCurrency(depreciation.reduce((sum, row) => sum + row.current_value, 0))}
+              </p>
+            ) : null}
           </div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-muted">
-                  <th className="py-2 pr-3 font-medium">Asset</th>
-                  <th className="py-2 pr-3 font-medium">Department</th>
-                  <th className="py-2 pr-3 font-medium">Purchased</th>
-                  <th className="py-2 pr-3 font-medium text-right">Cost</th>
-                  <th className="py-2 pr-3 font-medium text-right">Annual dep.</th>
-                  <th className="py-2 font-medium text-right">Current value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {depreciation.map((row) => (
-                  <tr key={row.id} className="border-b border-line text-ink">
-                    <td className="py-2 pr-3">{row.asset_tag}</td>
-                    <td className="py-2 pr-3 text-ink-muted">{row.department ?? '—'}</td>
-                    <td className="py-2 pr-3 text-ink-muted">{row.purchase_date}</td>
-                    <td className="py-2 pr-3 text-right tabular-nums">
-                      {formatCurrency(row.purchase_cost)}
-                    </td>
-                    <td className="py-2 pr-3 text-right tabular-nums">
-                      {formatCurrency(row.annual_depreciation)}
-                    </td>
-                    <td className="py-2 text-right font-medium tabular-nums">
-                      {formatCurrency(row.current_value)}
-                    </td>
+          {depreciation.length > 0 ? (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-muted">
+                    <th className="py-2 pr-3 font-medium">Asset</th>
+                    <th className="py-2 pr-3 font-medium">Department</th>
+                    <th className="py-2 pr-3 font-medium">Purchased</th>
+                    <th className="py-2 pr-3 font-medium text-right">Cost</th>
+                    <th className="py-2 pr-3 font-medium text-right">Annual dep.</th>
+                    <th className="py-2 font-medium text-right">Current value</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {depreciation.map((row) => (
+                    <tr key={row.id} className="border-b border-line text-ink">
+                      <td className="py-2 pr-3">{row.asset_tag}</td>
+                      <td className="py-2 pr-3 text-ink-muted">{row.department ?? '—'}</td>
+                      <td className="py-2 pr-3 text-ink-muted">{row.purchase_date}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {formatCurrency(row.purchase_cost)}
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {formatCurrency(row.annual_depreciation)}
+                      </td>
+                      <td className="py-2 text-right font-medium tabular-nums">
+                        {formatCurrency(row.current_value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-ink-muted">No assets to depreciate yet.</p>
+          )}
         </section>
       ) : null}
 

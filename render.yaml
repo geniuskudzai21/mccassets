@@ -1,0 +1,23 @@
+# Render blueprint — deploys the backend service.
+# Point Render at this repo; it builds the `backend` workspace and serves the API.
+# Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CORS_ORIGIN in the dashboard.
+
+services:
+  - type: web
+    name: mcas-ict-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

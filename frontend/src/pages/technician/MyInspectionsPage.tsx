@@ -21,6 +21,8 @@ export default function MyInspectionsPage() {
   const { user } = useAuth()
   const [inspections, setInspections] = useState<InspectionEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [assets, setAssets] = useState<Record<string, AssetRow>>({})
 
   useEffect(() => {
@@ -30,16 +32,20 @@ export default function MyInspectionsPage() {
       .then((result) => {
         if (!active) return
         setInspections(result.data)
+        setError(null)
         setLoading(false)
       })
-      .catch(() => {
-        if (active) setLoading(false)
+      .catch((err: unknown) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Could not load inspections.')
+          setLoading(false)
+        }
       })
 
     return () => {
       active = false
     }
-  }, [user])
+  }, [user, refreshKey])
 
   useEffect(() => {
     if (inspections.length === 0) return
@@ -70,6 +76,25 @@ export default function MyInspectionsPage() {
 
       {loading ? (
         <div className="py-16 text-center text-sm text-ink-muted">Loading…</div>
+      ) : error ? (
+        <EmptyState
+          icon={<ClipboardList className="h-10 w-10" />}
+          title="Could not load inspections"
+          description={error}
+          action={
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true)
+                setError(null)
+                setRefreshKey((key) => key + 1)
+              }}
+              className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+            >
+              Retry
+            </button>
+          }
+        />
       ) : inspections.length === 0 ? (
         <EmptyState
           icon={<ClipboardList className="h-10 w-10" />}

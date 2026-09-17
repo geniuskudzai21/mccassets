@@ -26,7 +26,7 @@ export default function AssetDetailPage() {
   const navigate = useNavigate()
   const { role } = useAuth()
   const { asset, loading, error } = useAsset(id)
-  const { timeline } = useAssetHistory(id)
+  const { timeline, loading: historyLoading, error: historyError } = useAssetHistory(id)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -162,11 +162,17 @@ export default function AssetDetailPage() {
             <ClipboardList className="h-4 w-4 text-council-teal" aria-hidden />
             Activity
           </h3>
-          {timeline.length === 0 ? (
+          {historyLoading ? (
+            <p className="mt-4 text-sm text-ink-muted">Loading activity…</p>
+          ) : historyError ? (
+            <p role="alert" className="mt-4 text-sm text-status-poor">
+              {historyError}
+            </p>
+          ) : timeline != null && timeline.length === 0 ? (
             <p className="mt-4 text-sm text-ink-muted">
               No inspections or maintenance recorded yet.
             </p>
-          ) : (
+          ) : timeline != null ? (
             <ul className="mt-4 space-y-4">
               {timeline.map((entry) => (
                 <li key={`${entry.kind}-${entry.item.id}`} className="flex gap-3">
@@ -200,7 +206,7 @@ export default function AssetDetailPage() {
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </section>
       </div>
 
