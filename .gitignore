@@ -12,6 +12,7 @@ build/
 .env.*.local
 !.env.example
 
+DEPLOY.md
 # Editor / OS
 .vscode/
 .idea/
