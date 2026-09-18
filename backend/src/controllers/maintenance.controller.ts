@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 import { getSupabase } from '../config/supabase.js'
 import { HttpError } from '../middleware/errorHandler.js'
 import { maintenanceQuerySchema, maintenanceUpdateSchema } from '../schemas/maintenance.schema.js'
-import { notify } from '../services/notifications.js'
+import { hasUnreadNotification, markNotificationsRead, notify } from '../services/notifications.js'
 import type { MaintenanceRequest } from '../types/db.js'
 
 interface MaintenanceWithLinks {
@@ -149,13 +149,30 @@ export async function updateMaintenanceRequest(req: Request, res: Response) {
 
   if (body.assigned_to !== undefined && updated.assigned_to) {
     const linked = rows[0]
-    await notify(
-      updated.assigned_to,
-      'maintenance_assigned',
-      'Maintenance task assigned',
-      `${linked.asset?.asset_tag ?? 'An asset'} — ${updated.description}`,
-      updated.asset_id,
-    )
+    const alreadyNotified = await hasUnreadNotification({
+      userId: updated.assigned_to,
+      type: 'maintenance_assigned',
+      assetId: updated.asset_id,
+    })
+    if (!alreadyNotified) {
+      await notify(
+        updated.assigned_to,
+        'maintenance_assigned',
+        'Maintenance task assigned',
+        `${linked.asset?.asset_tag ?? 'An asset'} — ${updated.description}`,
+        updated.asset_id,
+      )
+    }
+  }
+
+  // Once the request moves out of "pending" (approved / in progress / completed / rejected),
+  // the assignee's task-notification is stale, so clear it for them automatically.
+  if (updated.assigned_to && nextStatus !== 'pending') {
+    await markNotificationsRead({
+      userId: updated.assigned_to,
+      type: 'maintenance_assigned',
+      assetId: updated.asset_id,
+    })
   }
 
   res.json({ data: rows[0] })

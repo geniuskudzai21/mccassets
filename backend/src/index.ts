@@ -1,7 +1,6 @@
 import cors from 'cors'
 import express from 'express'
 import helmet from 'helmet'
-import { rateLimit } from 'express-rate-limit'
 import { config } from './config/index.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import assetRouter from './routes/asset.route.js'
@@ -26,15 +25,6 @@ app.use(
   }),
 )
 app.use(express.json({ limit: '1mb' }))
-
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-  }),
-)
 
 app.get('/api', (_req, res) => {
   res.json({ service: 'mcas-ict-backend', docs: '/api/health' })

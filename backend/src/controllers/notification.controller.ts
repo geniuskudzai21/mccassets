@@ -114,3 +114,34 @@ export async function markAllNotificationsRead(req: Request, res: Response) {
 
   res.json({ data: { updated: true } })
 }
+
+export async function markNotificationsReadBySource(req: Request, res: Response) {
+  const userId = req.user?.id
+  if (!userId) {
+    throw new HttpError(401, 'Authentication required')
+  }
+
+  const body = z
+    .object({
+      type: z.string().min(1).max(100),
+      asset_id: z.string().uuid(),
+    })
+    .parse(req.body)
+
+  const supabase = getSupabase()
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('type', body.type)
+    .eq('asset_id', body.asset_id)
+    .is('read_at', null)
+    .select('id')
+
+  if (error) {
+    throw new HttpError(500, 'Failed to update notifications')
+  }
+
+  res.json({ data: { updated: (data ?? []).length } })
+}

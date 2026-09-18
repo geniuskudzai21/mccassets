@@ -25,4 +25,51 @@ export async function notify(userId: string, type: string, title: string, body: 
   }
 }
 
+interface MarkNotificationsReadInput {
+  userId: string
+  type?: string
+  assetId?: string | null
+}
+
+/** Marks a user's unread notifications as read, optionally scoped by type and/or asset. */
+export async function markNotificationsRead(input: MarkNotificationsReadInput): Promise<void> {
+  const supabase = getSupabase()
+  let builder = supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', input.userId)
+    .is('read_at', null)
+
+  if (input.type) {
+    builder = builder.eq('type', input.type)
+  }
+  if (input.assetId) {
+    builder = builder.eq('asset_id', input.assetId)
+  }
+
+  const { error } = await builder
+  if (error) {
+    // Best-effort: clearing notifications must never break the triggering action.
+    // eslint-disable-next-line no-console
+    console.error('Failed to mark notifications read', error.message)
+  }
+}
+
+/** Returns true if the user already has an unread notification matching type + asset. */
+export async function hasUnreadNotification(input: {
+  userId: string
+  type: string
+  assetId?: string | null
+}): Promise<boolean> {
+  const supabase = getSupabase()
+  let builder = supabase.from('notifications').select('id')
+
+  if (input.assetId) {
+    builder = builder.eq('asset_id', input.assetId)
+  }
+
+  const { data } = await builder.eq('user_id', input.userId).eq('type', input.type).is('read_at', null)
+  return (data ?? []).length > 0
+}
+
 export type { NotificationParams }
