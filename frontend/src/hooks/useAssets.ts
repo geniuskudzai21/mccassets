@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.ts'
 import type {
+  AssetDetail,
   AssetFilters,
   AssetListResponse,
-  AssetRow,
   AssetTimelineItem,
+  CentreRow,
   DepartmentRow,
 } from '../types/asset.ts'
 
@@ -26,6 +27,7 @@ export function useAssets({ filters, limit, offset }: UseAssetsOptions) {
     if (filters.department_id) params.set('department_id', filters.department_id)
     if (filters.type) params.set('type', filters.type)
     if (filters.q) params.set('q', filters.q)
+    if (filters.location) params.set('location', filters.location)
     params.set('limit', String(limit))
     params.set('offset', String(offset))
 
@@ -53,14 +55,14 @@ export function useAssets({ filters, limit, offset }: UseAssetsOptions) {
 }
 
 export function useAsset(id: string | undefined) {
-  const [asset, setAsset] = useState<AssetRow | null>(null)
+  const [asset, setAsset] = useState<AssetDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
     let active = true
 
-    api<{ data: AssetRow }>(`/api/assets/${id}`)
+    api<{ data: AssetDetail }>(`/api/assets/${id}`)
       .then((result) => {
         if (active) {
           setAsset(result.data)
@@ -133,4 +135,25 @@ export function useDepartments() {
   }, [])
 
   return { departments }
+}
+
+export function useCentres() {
+  const [centres, setCentres] = useState<CentreRow[]>([])
+
+  useEffect(() => {
+    let active = true
+    api<{ data: CentreRow[] }>('/api/centres')
+      .then((result) => {
+        if (active) setCentres(result.data)
+      })
+      .catch(() => {
+        /* leave empty */
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  return { centres }
 }

@@ -3,6 +3,8 @@ import { ArrowRight, ClipboardCheck, FileBarChart, ScanLine } from 'lucide-react
 import Button from '../components/ui/Button.tsx'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import { LogoMark } from '../components/brand/LogoMark.tsx'
+import { ScheduleCard } from '../components/schedule/ScheduleCard.tsx'
+import { MyMaintenanceList } from '../components/maintenance/MyMaintenanceList.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 
 const FEATURES = [
@@ -50,6 +52,17 @@ export default function HomePage() {
             <ScanLine className="h-5 w-5" aria-hidden />
             Start inspection
           </Link>
+
+          <div className="mt-6">
+            <ScheduleCard />
+          </div>
+
+          <section className="mt-6 rounded-md border border-line bg-paper p-5">
+            <h3 className="font-serif text-base font-semibold text-ink">My maintenance tasks</h3>
+            <div className="mt-3">
+              <MyMaintenanceList />
+            </div>
+          </section>
         </div>
       </TechnicianLayout>
     )

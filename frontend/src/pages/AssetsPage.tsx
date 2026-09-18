@@ -17,6 +17,7 @@ export default function AssetsPage() {
   const { role } = useAuth()
   const { departments } = useDepartments()
   const [q, setQ] = useState('')
+  const [location, setLocation] = useState('')
   const [status, setStatus] = useState('')
   const [type, setType] = useState('')
   const [departmentId, setDepartmentId] = useState('')
@@ -58,6 +59,7 @@ export default function AssetsPage() {
     setOffset(0)
     setApplied({
       q: q.trim() || undefined,
+      location: location.trim() || undefined,
       status: status || undefined,
       type: type || undefined,
       department_id: departmentId || undefined,
@@ -66,6 +68,7 @@ export default function AssetsPage() {
 
   function clearFilters() {
     setQ('')
+    setLocation('')
     setStatus('')
     setType('')
     setDepartmentId('')
@@ -193,6 +196,18 @@ export default function AssetsPage() {
             options={departmentOptions}
             value={departmentId}
             onChange={(event) => setDepartmentId(event.target.value)}
+          />
+        </div>
+        <div className="w-full sm:w-auto sm:flex-1">
+          <label htmlFor="location-search" className="block text-sm font-medium text-ink">
+            Location
+          </label>
+          <input
+            id="location-search"
+            value={location}
+            onChange={(event) => setLocation(event.target.value)}
+            placeholder="Building, room or wing"
+            className="mt-1 w-full rounded-md border border-line bg-paper py-2 px-3 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal"
           />
         </div>
         <div className="flex w-full gap-2 sm:w-auto">

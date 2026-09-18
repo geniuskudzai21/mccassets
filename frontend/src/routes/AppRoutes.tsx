@@ -3,6 +3,7 @@ import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import WorkspaceShell from '../components/layout/WorkspaceShell.tsx'
 import HomePage from '../pages/HomePage.tsx'
 import LoginPage from '../pages/LoginPage.tsx'
+import NotificationsPage from '../pages/NotificationsPage.tsx'
 import AssetsPage from '../pages/AssetsPage.tsx'
 import AssetDetailPage from '../pages/AssetDetailPage.tsx'
 import AssetFormPage from '../pages/AssetFormPage.tsx'
@@ -136,6 +137,15 @@ export default function AppRoutes() {
       />
 
       <Route
+        path="/notifications"
+        element={
+          <WorkspaceShell roles={['supervisor', 'admin']}>
+            <NotificationsPage />
+          </WorkspaceShell>
+        }
+      />
+
+      <Route
         path="/scan"
         element={
           <TechnicianRoute>
@@ -156,6 +166,14 @@ export default function AppRoutes() {
         element={
           <TechnicianRoute>
             <ProfilePage />
+          </TechnicianRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <TechnicianRoute>
+            <NotificationsPage />
           </TechnicianRoute>
         }
       />

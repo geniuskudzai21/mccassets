@@ -1,19 +1,23 @@
 import { getSupabase } from '../config/supabase.js'
 import { HttpError } from '../middleware/errorHandler.js'
+import { notify } from './notifications.js'
 import type { AssetStatus } from '../types/db.js'
 
 /**
  * Recomputes an asset's current_status after an inspection. The most recent
- * inspection result wins. Also writes an audit_log row and auto-raises a
- * maintenance request when the inspected condition warrants it.
+ * inspection result wins. Also writes an audit_log row (with GPS when the
+ * inspection captured it) and auto-raises a maintenance request when the
+ * inspected condition warrants it.
  */
 export async function applyInspectionResult(params: {
   assetId: string
   inspectionId: string
   status: AssetStatus
   technicianId: string
+  lat?: number | null
+  lng?: number | null
 }): Promise<void> {
-  const { assetId, inspectionId, status, technicianId } = params
+  const { assetId, inspectionId, status, technicianId, lat, lng } = params
   const supabase = getSupabase()
 
   const { error: updateError } = await supabase
@@ -31,6 +35,8 @@ export async function applyInspectionResult(params: {
     entity_type: 'assets',
     entity_id: assetId,
     metadata: { inspection_id: inspectionId, status },
+    lat: lat ?? null,
+    lng: lng ?? null,
   })
 
   if (auditError) {
@@ -72,6 +78,22 @@ export async function applyInspectionResult(params: {
         entity_id: request.id,
         metadata: { asset_id: assetId, status },
       })
+
+      const { data: staff } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('is_active', true)
+        .in('role', ['supervisor', 'technician'])
+
+      for (const member of staff ?? []) {
+        await notify(
+          member.id,
+          'fault_reported',
+          'Fault reported',
+          `An asset was inspected as ${status} and a maintenance request was raised automatically.`,
+          assetId,
+        )
+      }
     }
   }
 }

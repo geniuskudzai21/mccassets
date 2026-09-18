@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
+  Bell,
   Boxes,
   FileBarChart,
   LayoutDashboard,
@@ -24,6 +25,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
   { to: '/assets', label: 'Asset register', icon: Boxes, adminOnly: false },
+  { to: '/notifications', label: 'Notifications', icon: Bell, adminOnly: false },
   { to: '/admin/users', label: 'User management', icon: Settings2, adminOnly: true },
   { to: '/admin/disposals', label: 'Disposals', icon: Trash2, adminOnly: true },
   { to: '/admin/reports', label: 'Reports', icon: FileBarChart, adminOnly: true },

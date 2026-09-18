@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { getSupabase } from '../config/supabase.js'
 import { HttpError } from '../middleware/errorHandler.js'
 import { maintenanceQuerySchema, maintenanceUpdateSchema } from '../schemas/maintenance.schema.js'
+import { notify } from '../services/notifications.js'
 import type { MaintenanceRequest } from '../types/db.js'
 
 interface MaintenanceWithLinks {
@@ -64,6 +65,11 @@ export async function listMaintenanceRequests(req: Request, res: Response) {
   }
   if (query.asset_id) {
     builder = builder.eq('asset_id', query.asset_id)
+  }
+
+  if (req.user?.role === 'technician') {
+    // Technicians may only see work assigned to them.
+    builder = builder.eq('assigned_to', req.user.id)
   }
 
   const { data, error, count } = await builder
@@ -140,6 +146,17 @@ export async function updateMaintenanceRequest(req: Request, res: Response) {
   })
 
   const rows = await attachLinks([updated as MaintenanceWithLinks])
+
+  if (body.assigned_to !== undefined && updated.assigned_to) {
+    const linked = rows[0]
+    await notify(
+      updated.assigned_to,
+      'maintenance_assigned',
+      'Maintenance task assigned',
+      `${linked.asset?.asset_tag ?? 'An asset'} — ${updated.description}`,
+      updated.asset_id,
+    )
+  }
 
   res.json({ data: rows[0] })
 }

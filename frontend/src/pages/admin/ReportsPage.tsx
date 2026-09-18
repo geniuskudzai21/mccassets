@@ -4,6 +4,7 @@ import { AdminPageShell } from '../../components/admin/AdminPageShell.tsx'
 import { apiGet } from '../../lib/api.ts'
 import {
   buildAssetReportPdf,
+  buildAuditTrailCsv,
   type DepreciationRow,
   type ReplacementDueRow,
   type SummaryReportData,
@@ -11,6 +12,7 @@ import {
 import { formatCurrency } from '../../types/asset.ts'
 import { STATUS_COLORS, STATUS_LABELS } from '../../lib/status.ts'
 import type { AssetStatus } from '../../types/db.ts'
+import type { AuditTrailRow } from '../../types/asset.ts'
 
 interface SummaryResponse {
   data: SummaryReportData
@@ -32,10 +34,15 @@ interface ReplacementResponse {
   }
 }
 
+interface AuditTrailResponse {
+  data: AuditTrailRow[]
+}
+
 export default function ReportsPage() {
   const [summary, setSummary] = useState<SummaryReportData | null>(null)
   const [depreciation, setDepreciation] = useState<DepreciationRow[] | null>(null)
   const [replacement, setReplacement] = useState<ReplacementDueRow[] | null>(null)
+  const [audit, setAudit] = useState<AuditTrailRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -44,12 +51,14 @@ export default function ReportsPage() {
       apiGet<SummaryResponse>('/api/admin/reports/summary'),
       apiGet<DepreciationResponse>('/api/admin/reports/depreciation'),
       apiGet<ReplacementResponse>('/api/admin/reports/replacement-due'),
+      apiGet<AuditTrailResponse>('/api/admin/reports/audit-trail?limit=300'),
     ])
-      .then(([summaryResult, depreciationResult, replacementResult]) => {
+      .then(([summaryResult, depreciationResult, replacementResult, auditResult]) => {
         if (active) {
           setSummary(summaryResult.data)
           setDepreciation(depreciationResult.data.rows)
           setReplacement(replacementResult.data.rows)
+          setAudit(auditResult.data)
         }
       })
       .catch((err: unknown) => {
@@ -254,6 +263,60 @@ export default function ReportsPage() {
             </div>
           ) : (
             <p className="mt-3 text-sm text-ink-muted">No assets require replacement yet.</p>
+          )}
+        </section>
+      ) : null}
+    {audit ? (
+        <section className="mt-4 rounded-md border border-line bg-paper p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-serif text-lg font-semibold text-ink">Audit trail</h2>
+            <p className="text-sm text-ink-muted tabular-nums">
+              {audit.length} most recent actions
+            </p>
+          </div>
+          {audit.length > 0 ? (
+            <>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-ink-muted">
+                      <th className="py-2 pr-3 font-medium">When</th>
+                      <th className="py-2 pr-3 font-medium">Who</th>
+                      <th className="py-2 pr-3 font-medium">Action</th>
+                      <th className="py-2 pr-3 font-medium">Entity</th>
+                      <th className="py-2 font-medium">GPS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {audit.map((row) => (
+                      <tr key={row.id} className="border-b border-line text-ink">
+                        <td className="py-2 pr-3 text-ink-muted tabular-nums">
+                          {new Date(row.created_at).toLocaleString()}
+                        </td>
+                        <td className="py-2 pr-3">{row.user_name ?? '—'}</td>
+                        <td className="py-2 pr-3">{row.action}</td>
+                        <td className="py-2 pr-3 text-ink-muted">{row.entity_type}</td>
+                        <td className="py-2 text-ink-muted tabular-nums">
+                          {row.lat != null && row.lng != null
+                            ? `${row.lat.toFixed(6)}, ${row.lng.toFixed(6)}`
+                            : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                type="button"
+                onClick={() => buildAuditTrailCsv(audit)}
+                className="mt-4 inline-flex items-center gap-2 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+              >
+                <FileDown className="h-4 w-4" aria-hidden />
+                Export audit trail (CSV)
+              </button>
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-ink-muted">No audit entries recorded yet.</p>
           )}
         </section>
       ) : null}

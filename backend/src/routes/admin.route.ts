@@ -5,6 +5,7 @@ import {
   updateDisposal,
 } from '../controllers/admin/disposal.controller.js'
 import {
+  getAuditTrail,
   getDepreciationReport,
   getReplacementDueReport,
   getReportSummary,
@@ -30,5 +31,6 @@ adminRouter.patch('/disposals/:id', updateDisposal)
 adminRouter.get('/reports/summary', getReportSummary)
 adminRouter.get('/reports/depreciation', getDepreciationReport)
 adminRouter.get('/reports/replacement-due', getReplacementDueReport)
+adminRouter.get('/reports/audit-trail', getAuditTrail)
 
 export default adminRouter

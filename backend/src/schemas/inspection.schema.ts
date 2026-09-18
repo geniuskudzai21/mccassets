@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { assetStatusSchema, assetTypeSchema } from './asset.schema.js'
+import { assetStatusSchema, assetTypeSchema, isoDateSchema } from './asset.schema.js'
 
 export const createInspectionSchema = z.object({
   asset_id: z.string().uuid(),
@@ -20,6 +20,16 @@ export const createNewAssetInspectionSchema = z.object({
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   client_uuid: z.string().uuid().optional(),
+  brand: z.string().trim().max(100).nullable().optional(),
+  model: z.string().trim().max(100).nullable().optional(),
+  serial_number: z.string().trim().max(100).nullable().optional(),
+  building: z.string().trim().max(100).nullable().optional(),
+  room: z.string().trim().max(100).nullable().optional(),
+  department_id: z.string().uuid().nullable().optional(),
+  assigned_user: z.string().trim().max(100).nullable().optional(),
+  warranty_expiry: isoDateSchema.nullable().optional(),
+  purchase_cost: z.number().nonnegative().max(100000000).nullable().optional(),
+  useful_life_years: z.number().int().positive().max(100).nullable().optional(),
 })
 
 export const inspectionQuerySchema = z.object({

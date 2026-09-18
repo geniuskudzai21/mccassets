@@ -39,8 +39,8 @@ export const assetStatuses: { value: string; label: string }[] = [
 
 const costNumber = z
   .string()
-  .refine((value) => value.trim() !== '' && !Number.isNaN(Number(value)), 'Enter a number')
-  .refine((value) => Number(value) >= 0, 'Cost cannot be negative')
+  .refine((value) => value.trim() === '' || !Number.isNaN(Number(value)), 'Enter a number')
+  .refine((value) => value.trim() === '' || Number(value) >= 0, 'Cost cannot be negative')
 
 const wholeYears = z.union([z.literal(''), z.string().regex(/^\d+$/, 'Enter a whole number')])
 
@@ -54,6 +54,7 @@ export const assetFormSchema = z.object({
     .union([z.literal(''), z.string().uuid('Select a department')])
     .nullable()
     .optional(),
+  assigned_user: z.string().max(100).nullable().optional(),
   purchase_date: z.string().min(1, 'Purchase date is required'),
   purchase_cost: costNumber,
   useful_life_years: wholeYears.nullable().optional(),
@@ -76,8 +77,12 @@ export function toAssetPayload(values: AssetFormValues) {
     model: emptyToNull(values.model),
     serial_number: emptyToNull(values.serial_number),
     department_id: emptyToNull(values.department_id),
+    assigned_user: emptyToNull(values.assigned_user),
     purchase_date: new Date(`${values.purchase_date}T00:00:00`).toISOString(),
-    purchase_cost: Number(values.purchase_cost),
+    purchase_cost:
+      values.purchase_cost && values.purchase_cost.trim() !== ''
+        ? Number(values.purchase_cost)
+        : null,
     useful_life_years:
       values.useful_life_years && values.useful_life_years !== ''
         ? Number(values.useful_life_years)

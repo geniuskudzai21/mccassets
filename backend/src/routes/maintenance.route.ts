@@ -10,7 +10,7 @@ const router = Router()
 
 router.use(authenticate)
 
-router.get('/', requireRole('supervisor', 'admin'), listMaintenanceRequests)
+router.get('/', requireRole('technician', 'supervisor', 'admin'), listMaintenanceRequests)
 router.patch('/:id', requireRole('supervisor', 'admin'), updateMaintenanceRequest)
 
 export default router

@@ -3,6 +3,7 @@ import { SYNC_INTERVAL_MS, trySyncOnce } from '../../lib/sync.ts'
 import BottomNav from './BottomNav.tsx'
 import { SyncStatusIndicator } from './SyncStatusIndicator.tsx'
 import { LogoMark } from '../brand/LogoMark.tsx'
+import { NotificationsBell } from '../notifications/NotificationsBell.tsx'
 
 export default function TechnicianLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -31,7 +32,10 @@ export default function TechnicianLayout({ children }: { children: ReactNode }) 
             <LogoMark size={28} ringless />
             MCAS-ICT
           </p>
-          <SyncStatusIndicator />
+          <div className="flex items-center gap-2">
+            <NotificationsBell />
+            <SyncStatusIndicator />
+          </div>
         </header>
         <main>{children}</main>
       </div>

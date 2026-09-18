@@ -54,6 +54,8 @@ async function createInspectionRecord(
     inspectionId: data.id,
     status: params.status,
     technicianId: params.technicianId,
+    lat: params.lat ?? null,
+    lng: params.lng ?? null,
   })
 
   return data as InspectionRow
@@ -138,6 +140,8 @@ export async function createInspection(req: Request, res: Response) {
     inspectionId: inspection.id,
     status: body.status,
     technicianId,
+    lat: inspection.lat ?? null,
+    lng: inspection.lng ?? null,
   })
 
   res.status(201).json({ data: inspection as InspectionRow })
@@ -180,7 +184,16 @@ export async function createNewAssetInspection(req: Request, res: Response) {
         asset_tag: assetTag,
         type: body.type,
         purchase_date: new Date().toISOString(),
-        purchase_cost: 0,
+        purchase_cost: body.purchase_cost ?? null,
+        useful_life_years: body.useful_life_years ?? undefined,
+        brand: body.brand ?? null,
+        model: body.model ?? null,
+        serial_number: body.serial_number ?? null,
+        department_id: body.department_id ?? null,
+        assigned_user: body.assigned_user ?? null,
+        building: body.building ?? null,
+        room: body.room ?? null,
+        warranty_expiry: body.warranty_expiry ?? null,
         last_lat: body.lat ?? null,
         last_lng: body.lng ?? null,
       })
@@ -277,6 +290,8 @@ export async function syncInspections(req: Request, res: Response) {
       inspectionId: inspection.id,
       status: item.status,
       technicianId,
+      lat: inspection.lat ?? null,
+      lng: inspection.lng ?? null,
     })
 
     syncedUuids.push(item.client_uuid)

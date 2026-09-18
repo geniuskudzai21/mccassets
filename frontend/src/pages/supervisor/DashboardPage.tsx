@@ -7,7 +7,9 @@ import {
 } from '../../components/supervisor/StatusBreakdownChart.tsx'
 import type { LocationInfo } from '../../components/supervisor/types.ts'
 import { MaintenanceList } from '../../components/maintenance/MaintenanceList.tsx'
+import { ScheduleCard } from '../../components/schedule/ScheduleCard.tsx'
 import { apiGet } from '../../lib/api.ts'
+import { formatDate } from '../../types/asset.ts'
 
 interface AssetStatsResponse {
   data: {
@@ -20,20 +22,38 @@ interface AssetStatsResponse {
 export default function DashboardPage() {
   const [stats, setStats] = useState<AssetStatsResponse['data'] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   useEffect(() => {
     let active = true
     apiGet<AssetStatsResponse>('/api/assets/stats')
       .then((result) => {
-        if (active) setStats(result.data)
+        if (active) {
+          setStats(result.data)
+          setLastUpdated(new Date())
+        }
       })
       .catch((err: unknown) => {
         if (active) {
           setError(err instanceof Error ? err.message : 'Could not load the dashboard.')
         }
       })
+    const timer = setInterval(() => {
+      if (!active) return
+      apiGet<AssetStatsResponse>('/api/assets/stats')
+        .then((result) => {
+          if (active) {
+            setStats(result.data)
+            setLastUpdated(new Date())
+          }
+        })
+        .catch(() => {
+          /* keep previous data on transient failures */
+        })
+    }, 60 * 1000)
     return () => {
       active = false
+      clearInterval(timer)
     }
   }, [])
 
@@ -46,6 +66,9 @@ export default function DashboardPage() {
         <span className="inline-flex items-center gap-2 text-sm text-ink-muted">
           <LayoutDashboard className="h-4 w-4 text-council-teal" aria-hidden />
           {stats ? `${stats.total} assets` : 'Overview'}
+          {lastUpdated ? (
+            <span className="text-xs tabular-nums">· Updated {formatDate(lastUpdated.toISOString())}</span>
+          ) : null}
         </span>
       </header>
 
@@ -82,13 +105,19 @@ export default function DashboardPage() {
           </section>
         </div>
 
-        <section className="mt-6 rounded-md border border-line bg-paper p-5">
-          <h2 className="font-serif text-lg font-semibold text-ink">Maintenance requests</h2>
-          <p className="mb-4 mt-0.5 text-sm text-ink-muted">
-            Approve, assign, and track work raised by inspections.
-          </p>
-          <MaintenanceList />
-        </section>
+        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <section className="min-w-0 rounded-md border border-line bg-paper p-5">
+            <h2 className="font-serif text-lg font-semibold text-ink">Maintenance requests</h2>
+            <p className="mb-4 mt-0.5 text-sm text-ink-muted">
+              Approve, assign, and track work raised by inspections.
+            </p>
+            <MaintenanceList />
+          </section>
+
+          <div className="min-w-0">
+            <ScheduleCard showReplacement />
+          </div>
+        </div>
       </main>
     </div>
   )

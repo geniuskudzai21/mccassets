@@ -5,6 +5,20 @@ import { signUploadSchema } from '../schemas/upload.schema.js'
 
 const bucket = 'photos'
 
+async function ensureBucket(supabase: ReturnType<typeof getSupabase>): Promise<void> {
+  const { error } = await supabase.storage.createBucket(bucket, { public: true })
+
+  if (!error) return
+
+  const alreadyExists =
+    error.message?.toLowerCase().includes('already exists') ||
+    error.message?.toLowerCase().includes('duplicate')
+
+  if (!alreadyExists) {
+    throw new HttpError(500, 'Photo storage is not available')
+  }
+}
+
 export async function signUpload(req: Request, res: Response) {
   const { filename, size } = signUploadSchema.parse(req.body)
 
@@ -18,11 +32,19 @@ export async function signUpload(req: Request, res: Response) {
   const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
   const path = `${userId}/${crypto.randomUUID()}-${safeFilename}`
 
-  const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, {
+  let { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, {
     upsert: false,
   })
 
   if (error) {
+    // First run on a fresh project: the bucket may not exist yet.
+    await ensureBucket(supabase)
+    ;({ data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, {
+      upsert: false,
+    }))
+  }
+
+  if (error || !data) {
     throw new HttpError(500, 'Failed to create upload URL')
   }
 

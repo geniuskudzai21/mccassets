@@ -7,6 +7,6 @@ const router = Router()
 
 router.use(authenticate)
 
-router.get('/', requireRole('supervisor', 'admin'), listUsers)
+router.get('/', requireRole('technician', 'supervisor', 'admin'), listUsers)
 
 export default router

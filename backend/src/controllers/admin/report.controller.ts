@@ -1,19 +1,9 @@
 import type { Request, Response } from 'express'
+import { z } from 'zod'
 import { getSupabase } from '../../config/supabase.js'
 import { HttpError } from '../../middleware/errorHandler.js'
+import { depreciateAsset } from '../../services/depreciation.js'
 import type { Asset } from '../../types/db.js'
-
-const DAYS_PER_YEAR = 365.25
-
-function yearsBetween(from: string, date: Date): number {
-  return (date.getTime() - new Date(from).getTime()) / (DAYS_PER_YEAR * 24 * 60 * 60 * 1000)
-}
-
-function depreciatedValue(cost: number, usefulLifeYears: number, fromDate: string, asOf: Date) {
-  const age = Math.max(0, yearsBetween(fromDate, asOf))
-  const annual = usefulLifeYears > 0 ? cost / usefulLifeYears : cost
-  return Math.max(0, cost - annual * age)
-}
 
 export async function getReportSummary(_req: Request, res: Response) {
   const supabase = getSupabase()
@@ -87,7 +77,7 @@ export async function getDepreciationReport(_req: Request, res: Response) {
   const { data: departmentsRaw, error: deptError } = await supabase
     .from('departments')
     .select('id, name')
-    .in('id', departmentIds)
+    .in('id', departmentIds.length > 0 ? departmentIds : ['00000000-0000-0000-0000-000000000000'])
 
   if (deptError) {
     throw new HttpError(500, 'Failed to load departments')
@@ -100,11 +90,7 @@ export async function getDepreciationReport(_req: Request, res: Response) {
 
   const rows = assetRows
     .map((asset) => {
-      const cost = Number(asset.purchase_cost ?? 0)
-      const usefulLifeYears = Number(asset.useful_life_years || 1)
-      const current = depreciatedValue(cost, usefulLifeYears, asset.purchase_date, asOf)
-      const endOfLife = new Date(asset.purchase_date)
-      endOfLife.setUTCFullYear(endOfLife.getUTCFullYear() + Math.floor(usefulLifeYears))
+      const depreciation = depreciateAsset(asset, asOf)
       return {
         id: asset.id,
         asset_tag: asset.asset_tag,
@@ -112,12 +98,15 @@ export async function getDepreciationReport(_req: Request, res: Response) {
           ? (departmentsById.get(asset.department_id)?.name ?? null)
           : null,
         purchase_date: asset.purchase_date,
-        useful_life_years: usefulLifeYears,
-        end_of_life: endOfLife.toISOString().slice(0, 10),
-        purchase_cost: Math.round(cost * 100) / 100,
-        annual_depreciation: Math.round((cost / usefulLifeYears) * 100) / 100,
-        current_value: Math.round(current * 100) / 100,
-        replacement_due: current <= 0,
+        useful_life_years: depreciation.usefulLifeYears,
+        end_of_life: depreciation.endOfLife,
+        purchase_cost: Math.round(depreciation.cost * 100) / 100,
+        annual_depreciation:
+          depreciation.usefulLifeYears > 0
+            ? Math.round((depreciation.cost / depreciation.usefulLifeYears) * 100) / 100
+            : Math.round(depreciation.cost * 100) / 100,
+        current_value: Math.round(depreciation.currentValue * 100) / 100,
+        replacement_due: depreciation.replacementDue,
       }
     })
     .sort((a, b) => a.asset_tag.localeCompare(b.asset_tag))
@@ -143,12 +132,7 @@ export async function getReplacementDueReport(_req: Request, res: Response) {
 
   const rows = assetRows
     .map((asset) => {
-      const cost = Number(asset.purchase_cost ?? 0)
-      const usefulLifeYears = Number(asset.useful_life_years || 1)
-      const current = depreciatedValue(cost, usefulLifeYears, asset.purchase_date, asOf)
-      const endOfLife = new Date(asset.purchase_date)
-      endOfLife.setUTCFullYear(endOfLife.getUTCFullYear() + Math.floor(usefulLifeYears))
-      const daysToEnd = Math.ceil((endOfLife.getTime() - asOf.getTime()) / (24 * 60 * 60 * 1000))
+      const depreciation = depreciateAsset(asset, asOf)
       return {
         id: asset.id,
         asset_tag: asset.asset_tag,
@@ -156,15 +140,57 @@ export async function getReplacementDueReport(_req: Request, res: Response) {
         model: asset.model,
         status: asset.current_status,
         purchase_date: asset.purchase_date,
-        useful_life_years: usefulLifeYears,
-        end_of_life: endOfLife.toISOString().slice(0, 10),
-        days_to_end: daysToEnd,
-        purchase_cost: cost,
-        current_value: Math.round(current * 100) / 100,
+        useful_life_years: depreciation.usefulLifeYears,
+        end_of_life: depreciation.endOfLife,
+        days_to_end: depreciation.daysToEnd,
+        purchase_cost: Math.round(depreciation.cost * 100) / 100,
+        current_value: Math.round(depreciation.currentValue * 100) / 100,
+        replacement_estimate: asset.replacement_estimate,
       }
     })
     .filter((row) => row.days_to_end <= horizonDays)
     .sort((a, b) => a.days_to_end - b.days_to_end)
 
   res.json({ data: { as_of: asOf.toISOString().slice(0, 10), count: rows.length, rows } })
+}
+
+export async function getAuditTrail(req: Request, res: Response) {
+  const supabase = getSupabase()
+
+  const query = z
+    .object({
+      limit: z.coerce.number().int().min(1).max(500).default(200),
+    })
+    .parse(req.query)
+
+  const { data: logs, error } = await supabase
+    .from('audit_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(query.limit)
+
+  if (error) {
+    throw new HttpError(500, 'Failed to load audit trail')
+  }
+
+  const rows = logs ?? []
+  const userIds = [...new Set(rows.map((row) => row.user_id).filter(Boolean) as string[])]
+
+  const { data: profilesRaw, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
+
+  if (profilesError) {
+    throw new HttpError(500, 'Failed to load audit users')
+  }
+
+  const profilesById = new Map((profilesRaw ?? []).map((profile) => [profile.id, profile.full_name]))
+
+  res.json({
+    data: rows.map((row) => ({
+      ...row,
+      user_name: row.user_id ? (profilesById.get(row.user_id) ?? null) : null,
+    })),
+  })
 }

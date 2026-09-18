@@ -45,6 +45,25 @@ export interface Department {
   Relationships: []
 }
 
+export interface Centre {
+  Row: {
+    id: string
+    name: string
+    created_at: string
+  }
+  Insert: {
+    id?: string
+    name: string
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    name?: string
+    created_at?: string
+  }
+  Relationships: []
+}
+
 export interface Profile {
   Row: {
     id: string
@@ -98,6 +117,8 @@ export interface Asset {
     building: string | null
     room: string | null
     warranty_expiry: string | null
+    inspection_interval_months: number
+    replacement_estimate: number | null
     created_at: string
     updated_at: string
   }
@@ -120,6 +141,8 @@ export interface Asset {
     building?: string | null
     room?: string | null
     warranty_expiry?: string | null
+    inspection_interval_months?: number
+    replacement_estimate?: number | null
     created_at?: string
     updated_at?: string
   }
@@ -142,8 +165,75 @@ export interface Asset {
     building?: string | null
     room?: string | null
     warranty_expiry?: string | null
+    inspection_interval_months?: number
+    replacement_estimate?: number | null
     created_at?: string
     updated_at?: string
+  }
+  Relationships: []
+}
+
+export interface Transfer {
+  Row: {
+    id: string
+    asset_id: string
+    from_department_id: string | null
+    to_department_id: string | null
+    transferred_by: string | null
+    transferred_at: string
+    notes: string | null
+  }
+  Insert: {
+    id?: string
+    asset_id: string
+    from_department_id?: string | null
+    to_department_id?: string | null
+    transferred_by?: string | null
+    transferred_at?: string
+    notes?: string | null
+  }
+  Update: {
+    id?: string
+    asset_id?: string
+    from_department_id?: string | null
+    to_department_id?: string | null
+    transferred_by?: string | null
+    transferred_at?: string
+    notes?: string | null
+  }
+  Relationships: []
+}
+
+export interface Notification {
+  Row: {
+    id: string
+    user_id: string
+    type: string
+    title: string
+    body: string
+    asset_id: string | null
+    created_at: string
+    read_at: string | null
+  }
+  Insert: {
+    id?: string
+    user_id: string
+    type: string
+    title: string
+    body?: string
+    asset_id?: string | null
+    created_at?: string
+    read_at?: string | null
+  }
+  Update: {
+    id?: string
+    user_id?: string
+    type?: string
+    title?: string
+    body?: string
+    asset_id?: string | null
+    created_at?: string
+    read_at?: string | null
   }
   Relationships: []
 }
@@ -267,6 +357,8 @@ export interface AuditLog {
     entity_type: string
     entity_id: string
     metadata: Record<string, unknown> | null
+    lat: number | null
+    lng: number | null
     created_at: string
   }
   Insert: {
@@ -276,6 +368,8 @@ export interface AuditLog {
     entity_type: string
     entity_id: string
     metadata?: Record<string, unknown> | null
+    lat?: number | null
+    lng?: number | null
     created_at?: string
   }
   Update: {
@@ -285,6 +379,8 @@ export interface AuditLog {
     entity_type?: string
     entity_id?: string
     metadata?: Record<string, unknown> | null
+    lat?: number | null
+    lng?: number | null
     created_at?: string
   }
   Relationships: []
@@ -296,11 +392,14 @@ export interface Database {
   public: {
     Tables: {
       departments: Department
+      centres: Centre
       profiles: Profile
       assets: Asset
       inspections: Inspection
       maintenance_requests: MaintenanceRequest
+      transfers: Transfer
       disposals: Disposal
+      notifications: Notification
       audit_log: AuditLog
     }
     Views: Record<string, never>

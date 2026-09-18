@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import { formatCurrency, formatDate } from '../types/asset.ts'
+import type { AuditTrailRow } from '../types/asset.ts'
 
 export interface SummaryReportData {
   total: number
@@ -41,6 +42,47 @@ const MARGIN = 40
 const PAGE_HEIGHT = 842
 const BODY_TOP = 60
 const CONTENT_WIDTH = 515
+
+function escapeCsv(value: string | number | null | undefined): string {
+  if (value == null) return ''
+  const text = String(value)
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
+export function buildAuditTrailCsv(rows: AuditTrailRow[]): void {
+  const header = [
+    'Timestamp',
+    'User',
+    'Action',
+    'Entity type',
+    'Entity id',
+    'Latitude',
+    'Longitude',
+    'Metadata',
+  ]
+  const lines = rows.map((row) =>
+    [
+      row.created_at,
+      row.user_name ?? '',
+      row.action,
+      row.entity_type,
+      row.entity_id,
+      row.lat ?? '',
+      row.lng ?? '',
+      row.metadata ? JSON.stringify(row.metadata) : '',
+    ]
+      .map(escapeCsv)
+      .join(','),
+  )
+  const csv = [header.join(','), ...lines].join('\r\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `mcas-audit-trail-${new Date().toISOString().slice(0, 10)}.csv`
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
 
 function drawTableHeader(doc: jsPDF, headings: string[], x: number, y: number, widths: number[]) {
   doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(0, 0, 0)

@@ -1,5 +1,7 @@
 import {
+  AlertTriangle,
   ArrowLeft,
+  ArrowLeftRight,
   Building2,
   ClipboardList,
   Gauge,
@@ -12,7 +14,7 @@ import {
   Coins,
   Box,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.tsx'
 import { StatusBadge } from '../components/ui/StatusBadge.tsx'
@@ -32,6 +34,22 @@ export default function AssetDetailPage() {
 
   const canEdit = role === 'supervisor' || role === 'admin'
   const canDelete = role === 'admin'
+
+  const photos = useMemo(() => {
+    if (!timeline) return []
+    const seen = new Set<string>()
+    const urls: { url: string; at: string }[] = []
+    for (const entry of timeline) {
+      if (entry.kind !== 'inspection' || !entry.item.photo_urls) continue
+      for (const url of entry.item.photo_urls) {
+        if (!seen.has(url)) {
+          seen.add(url)
+          urls.push({ url, at: entry.at })
+        }
+      }
+    }
+    return urls
+  }, [timeline])
 
   async function handleDelete() {
     if (!asset || !window.confirm(`Delete ${asset.asset_tag}? This cannot be undone.`)) return
@@ -76,8 +94,11 @@ export default function AssetDetailPage() {
       label: 'Location',
       value: [asset.building, asset.room].filter(Boolean).join(', ') || '—',
     },
-    { label: 'Department', value: '—' },
-    { label: 'Assigned user', value: '—' },
+    { label: 'Department', value: asset.department_name ?? '—' },
+    {
+      label: 'Assigned user',
+      value: asset.assigned_user_name ?? asset.assigned_user ?? '—',
+    },
     { label: 'Purchase date', value: formatDate(asset.purchase_date) },
     { label: 'Purchase cost', value: formatCurrency(asset.purchase_cost) },
     { label: 'Useful life', value: `${asset.useful_life_years ?? '—'} years` },
@@ -100,6 +121,17 @@ export default function AssetDetailPage() {
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="font-serif text-2xl font-semibold text-ink">{asset.asset_tag}</h2>
             <StatusBadge status={asset.current_status} />
+            {typeof asset.functional === 'boolean' ? (
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                  asset.functional
+                    ? 'border-status-good/40 bg-status-good/10 text-status-good'
+                    : 'border-status-poor/40 bg-status-poor/10 text-status-poor'
+                }`}
+              >
+                {asset.functional ? 'Functional' : 'Faulty'}
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 text-sm text-ink-muted">
             {assetTypeLabel[asset.type] ?? asset.type}
@@ -178,28 +210,68 @@ export default function AssetDetailPage() {
                 <li key={`${entry.kind}-${entry.item.id}`} className="flex gap-3">
                   <span
                     className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line ${
-                      entry.kind === 'inspection' ? 'text-council-teal' : 'text-status-fair'
+                      entry.kind === 'inspection'
+                        ? 'text-council-teal'
+                        : entry.kind === 'transfer'
+                          ? 'text-council-gold'
+                          : 'text-status-fair'
                     }`}
                   >
                     {entry.kind === 'inspection' ? (
                       <ShieldAlert className="h-4 w-4" aria-hidden />
+                    ) : entry.kind === 'transfer' ? (
+                      <ArrowLeftRight className="h-4 w-4" aria-hidden />
                     ) : (
                       <Wrench className="h-4 w-4" aria-hidden />
                     )}
                   </span>
                   <div>
                     <p className="text-sm font-medium text-ink">
-                      {entry.kind === 'inspection' ? 'Inspection' : 'Maintenance request'}
+                      {entry.kind === 'inspection'
+                        ? 'Inspection'
+                        : entry.kind === 'transfer'
+                          ? 'Department transfer'
+                          : 'Maintenance request'}
                     </p>
                     <p className="text-sm text-ink-muted">
                       {formatDate(entry.at)} ·{' '}
                       {entry.kind === 'inspection' ? (
                         <StatusBadge status={entry.item.status} />
+                      ) : entry.kind === 'transfer' ? (
+                        <>
+                          {entry.item.from_department_name ?? 'Unassigned'} →{' '}
+                          {entry.item.to_department_name ?? 'Unassigned'}
+                        </>
                       ) : (
                         entry.item.status
                       )}
                     </p>
                     {entry.kind === 'inspection' && entry.item.notes ? (
+                      <p className="mt-1 text-sm text-ink-muted">{entry.item.notes}</p>
+                    ) : null}
+                    {entry.kind === 'inspection' &&
+                    entry.item.photo_urls &&
+                    entry.item.photo_urls.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {entry.item.photo_urls.map((url) => (
+                          <a
+                            key={url}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block h-16 w-16 overflow-hidden rounded-md border border-line focus:outline-none focus:ring-2 focus:ring-council-teal"
+                          >
+                            <img
+                              src={url}
+                              alt="Asset photo"
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
+                    {entry.kind === 'transfer' && entry.item.notes ? (
                       <p className="mt-1 text-sm text-ink-muted">{entry.item.notes}</p>
                     ) : null}
                   </div>
@@ -212,17 +284,51 @@ export default function AssetDetailPage() {
 
       <div className="mt-6 rounded-md border border-line bg-paper p-5">
         <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-ink">
+          <Box className="h-4 w-4 text-council-teal" aria-hidden />
+          Photos
+        </h3>
+        {photos.length > 0 ? (
+          <div className="mt-4 flex flex-wrap gap-3">
+            {photos.map((photo) => (
+              <a
+                key={photo.url}
+                href={photo.url}
+                target="_blank"
+                rel="noreferrer"
+                title={`Open photo (${formatDate(photo.at)})`}
+                className="block h-28 w-28 overflow-hidden rounded-md border border-line focus:outline-none focus:ring-2 focus:ring-council-teal"
+              >
+                <img
+                  src={photo.url}
+                  alt={`Asset photo from ${formatDate(photo.at)}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-ink-muted">No photos captured yet.</p>
+        )}
+      </div>
+
+      <div className="mt-6 rounded-md border border-line bg-paper p-5">
+        <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-ink">
           <Gauge className="h-4 w-4 text-council-teal" aria-hidden />
           Condition & suitability
         </h3>
         <div className="mt-3 grid gap-4 text-sm sm:grid-cols-3">
           <div className="flex items-center gap-2 text-ink-muted">
             <Box className="h-4 w-4" aria-hidden />
-            <span>Replacement due estimate</span>
+            <span>
+              {asset.replacement_due
+                ? `Replacement due — ${formatDate(asset.end_of_life)}`
+                : `Replacement due ${formatDate(asset.end_of_life)} (in ${asset.days_to_end} day(s))`}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-ink-muted">
             <Coins className="h-4 w-4" aria-hidden />
-            <span>Depreciation: coming soon</span>
+            <span>Current value {formatCurrency(asset.current_value)}</span>
           </div>
           <div className="flex items-center gap-2 text-ink-muted">
             <MapPin className="h-4 w-4" aria-hidden />
@@ -233,6 +339,19 @@ export default function AssetDetailPage() {
             </span>
           </div>
         </div>
+        {typeof asset.functional === 'boolean' && !asset.functional ? (
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {asset.functional_flags.map((flag) => (
+              <li
+                key={flag}
+                className="inline-flex items-center gap-1.5 rounded-full border border-status-poor/30 bg-status-poor/5 px-2.5 py-1 text-xs text-status-poor"
+              >
+                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+                {flag}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       {asset.parent_asset_id || asset.type === 'server' ? (

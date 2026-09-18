@@ -14,11 +14,12 @@ import {
   Send,
   X,
 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../../components/ui/Button.tsx'
 import { StatusBadge } from '../../components/ui/StatusBadge.tsx'
 import { useAuth } from '../../hooks/useAuth.ts'
+import { useCentres, useDepartments } from '../../hooks/useAssets.ts'
 import { useQrScanner } from '../../hooks/useQrScanner.ts'
 import { api, apiPost } from '../../lib/api.ts'
 import { queueInspection } from '../../lib/sync.ts'
@@ -34,7 +35,30 @@ const STEPS = ['Asset', 'Condition', 'Photo', 'Location', 'Review'] as const
 interface NewAssetPick {
   asset_tag: string
   type: AssetType
+  brand?: string
+  model?: string
+  serial_number?: string
+  building?: string
+  room?: string
+  department_id?: string
+  assigned_user?: string
+  warranty_expiry?: string
+  purchase_cost?: number
 }
+
+function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: ReactNode }) {
+  return (
+    <div>
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-ink">
+        {label}
+      </label>
+      <div className="mt-1">{children}</div>
+    </div>
+  )
+}
+
+const fieldClasses =
+  'w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal'
 
 const conditionOptions: {
   status: AssetStatus
@@ -59,6 +83,8 @@ const readFile = (file: File) =>
 export default function InspectionFlowPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { departments } = useDepartments()
+  const { centres } = useCentres()
 
   const [step, setStep] = useState(0)
   const [scanning, setScanning] = useState(false)
@@ -67,6 +93,15 @@ export default function InspectionFlowPage() {
   const [newItemOpen, setNewItemOpen] = useState(false)
   const [newAsset, setNewAsset] = useState<NewAssetPick | null>(null)
   const [newAssetType, setNewAssetType] = useState<AssetType>('other')
+  const [newBrand, setNewBrand] = useState('')
+  const [newModel, setNewModel] = useState('')
+  const [newSerial, setNewSerial] = useState('')
+  const [newBuilding, setNewBuilding] = useState('')
+  const [newRoom, setNewRoom] = useState('')
+  const [newDepartmentId, setNewDepartmentId] = useState('')
+  const [newAssignedUser, setNewAssignedUser] = useState('')
+  const [newWarrantyExpiry, setNewWarrantyExpiry] = useState('')
+  const [newCost, setNewCost] = useState('')
   const [assetError, setAssetError] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [status, setStatus] = useState<AssetStatus | null>(null)
@@ -180,6 +215,15 @@ export default function InspectionFlowPage() {
           photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
           lat: location?.lat,
           lng: location?.lng,
+          brand: newAsset.brand,
+          model: newAsset.model,
+          serial_number: newAsset.serial_number,
+          building: newAsset.building,
+          room: newAsset.room,
+          department_id: newAsset.department_id,
+          assigned_user: newAsset.assigned_user,
+          warranty_expiry: newAsset.warranty_expiry,
+          purchase_cost: newAsset.purchase_cost,
         })
         setSubmittedOffline(false)
         setDone(true)
@@ -351,36 +395,146 @@ export default function InspectionFlowPage() {
                     This item is not in the register. Register it now and start the inspection.
                   </p>
                 </div>
-                <label htmlFor="new-tag" className="mt-3 block text-sm font-medium text-ink">
-                  Asset tag / serial
-                </label>
-                <input
-                  id="new-tag"
-                  value={manualTag}
-                  onChange={(event) => setManualTag(event.target.value)}
-                  placeholder="e.g. MC-ICT-0001"
-                  className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal"
-                />
-                <label htmlFor="new-type" className="mt-3 block text-sm font-medium text-ink">
-                  Type
-                </label>
-                <select
-                  id="new-type"
-                  value={newAssetType}
-                  onChange={(event) => setNewAssetType(event.target.value as AssetType)}
-                  className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-council-teal"
-                >
-                  {assetTypes.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {assetTypeLabel[option.value] ?? option.value}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Field label="Asset tag / serial" htmlFor="new-tag">
+                    <input
+                      id="new-tag"
+                      value={manualTag}
+                      onChange={(event) => setManualTag(event.target.value)}
+                      placeholder="e.g. MC-ICT-0001"
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Type" htmlFor="new-type">
+                    <select
+                      id="new-type"
+                      value={newAssetType}
+                      onChange={(event) => setNewAssetType(event.target.value as AssetType)}
+                      className={fieldClasses}
+                    >
+                      {assetTypes.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {assetTypeLabel[option.value] ?? option.value}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Make" htmlFor="new-brand">
+                    <input
+                      id="new-brand"
+                      value={newBrand}
+                      onChange={(event) => setNewBrand(event.target.value)}
+                      placeholder="e.g. Dell, HP, Lenovo"
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Model" htmlFor="new-model">
+                    <input
+                      id="new-model"
+                      value={newModel}
+                      onChange={(event) => setNewModel(event.target.value)}
+                      placeholder="e.g. OptiPlex 7090"
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Serial number" htmlFor="new-serial">
+                    <input
+                      id="new-serial"
+                      value={newSerial}
+                      onChange={(event) => setNewSerial(event.target.value)}
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Department" htmlFor="new-department">
+                    <select
+                      id="new-department"
+                      value={newDepartmentId}
+                      onChange={(event) => setNewDepartmentId(event.target.value)}
+                      className={fieldClasses}
+                    >
+                      <option value="">No department</option>
+                      {departments.map((department) => (
+                        <option key={department.id} value={department.id}>
+                          {department.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Building / centre" htmlFor="new-building">
+                    <input
+                      id="new-building"
+                      list="new-centres"
+                      value={newBuilding}
+                      onChange={(event) => setNewBuilding(event.target.value)}
+                      placeholder="e.g. Civic Centre"
+                      className={fieldClasses}
+                    />
+                    <datalist id="new-centres">
+                      {centres.map((centre) => (
+                        <option key={centre.id} value={centre.name} />
+                      ))}
+                    </datalist>
+                  </Field>
+                  <Field label="Room" htmlFor="new-room">
+                    <input
+                      id="new-room"
+                      value={newRoom}
+                      onChange={(event) => setNewRoom(event.target.value)}
+                      placeholder="e.g. Ground floor"
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Warranty expiry" htmlFor="new-warranty">
+                    <input
+                      id="new-warranty"
+                      type="date"
+                      value={newWarrantyExpiry}
+                      onChange={(event) => setNewWarrantyExpiry(event.target.value)}
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Purchase cost (USD, optional)" htmlFor="new-cost">
+                    <input
+                      id="new-cost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newCost}
+                      onChange={(event) => setNewCost(event.target.value)}
+                      placeholder="Leave blank if unknown"
+                      className={fieldClasses}
+                    />
+                  </Field>
+                  <Field label="Assigned user" htmlFor="new-assignee">
+                    <input
+                      id="new-assignee"
+                      value={newAssignedUser}
+                      onChange={(event) => setNewAssignedUser(event.target.value)}
+                      placeholder="e.g. Mr T. Moyo"
+                      className={fieldClasses}
+                    />
+                  </Field>
+                </div>
                 <Button
                   className="mt-4 w-full"
                   disabled={manualTag.trim() === ''}
                   onClick={() => {
-                    setNewAsset({ asset_tag: manualTag.trim(), type: newAssetType })
+                    setNewAsset({
+                      asset_tag: manualTag.trim(),
+                      type: newAssetType,
+                      brand: newBrand.trim() || undefined,
+                      model: newModel.trim() || undefined,
+                      serial_number: newSerial.trim() || undefined,
+                      building: newBuilding.trim() || undefined,
+                      room: newRoom.trim() || undefined,
+                      department_id: newDepartmentId || undefined,
+                      assigned_user: newAssignedUser || undefined,
+                      warranty_expiry:
+                        newWarrantyExpiry
+                          ? new Date(`${newWarrantyExpiry}T00:00:00`).toISOString()
+                          : undefined,
+                      purchase_cost: newCost.trim() !== '' ? Number(newCost) : undefined,
+                    })
                     setNewItemOpen(false)
                     setStep(1)
                   }}
@@ -603,15 +757,18 @@ export default function InspectionFlowPage() {
               placeholder="Optional notes about the condition"
               className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-council-teal"
             />
-
-            {submitError ? (
-              <p role="alert" className="mt-3 text-sm text-status-poor">
-                {submitError}
-              </p>
-            ) : null}
           </section>
         )}
       </div>
+
+      {submitError ? (
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-status-poor/40 bg-status-poor/5 px-3 py-2 text-sm text-status-poor"
+        >
+          {submitError}
+        </p>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <Button
@@ -630,8 +787,14 @@ export default function InspectionFlowPage() {
             onClick={goNext}
             disabled={!canContinue() || submitting}
           >
-            {step === 3 ? 'Submit' : 'Continue'}
-            {step === 3 ? (
+            {submitting ? (
+              'Submitting…'
+            ) : step === 3 ? (
+              'Submit'
+            ) : (
+              'Continue'
+            )}
+            {submitting ? null : step === 3 ? (
               <Send className="h-5 w-5" aria-hidden />
             ) : (
               <ChevronRight className="h-5 w-5" aria-hidden />

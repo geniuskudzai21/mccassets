@@ -9,7 +9,7 @@ import {
   toAssetPayload,
   type AssetFormValues,
 } from '../schemas/asset.schema.ts'
-import { useAsset, useDepartments } from '../hooks/useAssets.ts'
+import { useAsset, useCentres, useDepartments } from '../hooks/useAssets.ts'
 import Button from '../components/ui/Button.tsx'
 import Select from '../components/ui/Select.tsx'
 import { apiPatch, apiPost } from '../lib/api.ts'
@@ -26,8 +26,10 @@ function toFormValues(asset: AssetRow): AssetFormValues {
     model: asset.model ?? '',
     serial_number: asset.serial_number ?? '',
     department_id: asset.department_id ?? '',
+    assigned_user: asset.assigned_user ?? '',
     purchase_date: asset.purchase_date.slice(0, 10),
-    purchase_cost: String(asset.purchase_cost),
+    purchase_cost:
+      asset.purchase_cost == null ? '' : String(asset.purchase_cost),
     useful_life_years: asset.useful_life_years ? String(asset.useful_life_years) : '',
     building: asset.building ?? '',
     room: asset.room ?? '',
@@ -41,6 +43,7 @@ export default function AssetFormPage() {
   const navigate = useNavigate()
   const { asset, loading: assetLoading } = useAsset(id)
   const { departments } = useDepartments()
+  const { centres } = useCentres()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const {
@@ -57,6 +60,7 @@ export default function AssetFormPage() {
       model: '',
       serial_number: '',
       department_id: '',
+      assigned_user: '',
       purchase_date: '',
       purchase_cost: '',
       useful_life_years: '',
@@ -179,6 +183,21 @@ export default function AssetFormPage() {
           />
 
           <div>
+            <label htmlFor="assigned_user" className="block text-sm font-medium text-ink">
+              Assigned user
+            </label>
+            <input
+              id="assigned_user"
+              className={inputClasses}
+              placeholder="e.g. Mr T. Moyo"
+              {...register('assigned_user')}
+            />
+            {errors.assigned_user ? (
+              <p className="mt-1 text-sm text-status-poor">{errors.assigned_user.message}</p>
+            ) : null}
+          </div>
+
+          <div>
             <label htmlFor="purchase_date" className="block text-sm font-medium text-ink">
               Purchase date
             </label>
@@ -203,6 +222,7 @@ export default function AssetFormPage() {
               step="0.01"
               min="0"
               className={inputClasses}
+              placeholder="Optional"
               {...register('purchase_cost')}
             />
             {errors.purchase_cost ? (
@@ -229,9 +249,20 @@ export default function AssetFormPage() {
 
           <div>
             <label htmlFor="building" className="block text-sm font-medium text-ink">
-              Building
+              Building / centre
             </label>
-            <input id="building" className={inputClasses} {...register('building')} />
+            <input
+              id="building"
+              list="building-centres"
+              className={inputClasses}
+              placeholder="e.g. Civic Centre"
+              {...register('building')}
+            />
+            <datalist id="building-centres">
+              {centres.map((centre) => (
+                <option key={centre.id} value={centre.name} />
+              ))}
+            </datalist>
             {errors.building ? (
               <p className="mt-1 text-sm text-status-poor">{errors.building.message}</p>
             ) : null}
