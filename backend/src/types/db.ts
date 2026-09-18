@@ -45,6 +45,25 @@ export interface Department {
   Relationships: []
 }
 
+export interface Centre {
+  Row: {
+    id: string
+    name: string
+    created_at: string
+  }
+  Insert: {
+    id?: string
+    name: string
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    name?: string
+    created_at?: string
+  }
+  Relationships: []
+}
+
 export interface Profile {
   Row: {
     id: string
@@ -376,6 +395,7 @@ export interface Database {
   public: {
     Tables: {
       departments: Department
+      centres: Centre
       profiles: Profile
       assets: Asset
       inspections: Inspection

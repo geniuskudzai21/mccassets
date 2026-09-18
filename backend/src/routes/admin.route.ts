@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { getAdminOverview } from '../controllers/admin/overview.controller.js'
 import {
   createDisposal,
   listDisposals,
@@ -32,5 +33,7 @@ adminRouter.get('/reports/summary', getReportSummary)
 adminRouter.get('/reports/depreciation', getDepreciationReport)
 adminRouter.get('/reports/replacement-due', getReplacementDueReport)
 adminRouter.get('/reports/audit-trail', getAuditTrail)
+
+adminRouter.get('/overview', getAdminOverview)
 
 export default adminRouter

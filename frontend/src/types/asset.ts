@@ -1,5 +1,7 @@
 import type {
   Asset,
+  AssetStatus,
+  AssetType,
   Centre,
   Department,
   Inspection,
@@ -33,6 +35,41 @@ export interface AssetDetail extends AssetRow {
   replacement_due: boolean
   functional: boolean
   functional_flags: string[]
+}
+
+export interface AdminOverview {
+  as_of: string
+  assets: {
+    total: number
+    total_value: number
+    by_status: Record<AssetStatus, number>
+    by_type: { type: AssetType; count: number }[]
+    by_department: { name: string; count: number }[]
+    by_centre: { name: string; count: number }[]
+    functional: number
+    faulty: number
+    located: number
+    unlocated: number
+  }
+  maintenance: {
+    open: number
+    pending: number
+    in_progress: number
+    completed_30d: number
+    assigned_technicians: number
+  }
+  inspections: { total: number; last_7d: number; last_30d: number }
+  alerts: {
+    replacement_due: number
+    warranty_expiring_90d: number
+    unlocated_assets: number
+  }
+  people: {
+    total: number
+    technicians: number
+    supervisors: number
+    admins: number
+  }
 }
 
 export interface AuditTrailRow {
