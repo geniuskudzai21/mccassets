@@ -1,0 +1,51 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # Every 3 days at 03:00 UTC — comfortably inside Supabase's 7-day
+    # inactivity window, so the free-tier project is never paused.
+    - cron: '0 3 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Keep Supabase awake
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://jxkgltlnrkgjgirchmeq.supabase.co' }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Ping auth health endpoint
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --retry 3 --retry-delay 5 --max-time 30 \
+            "${SUPABASE_URL}/auth/v1/health")
+          echo "auth/v1/health -> HTTP ${status}"
+          [ "$status" -lt 500 ]
+
+      - name: Query the database
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::warning::SUPABASE_ANON_KEY secret is not set; only the health endpoint was pinged. Add the secret so a real database query runs."
+            exit 0
+          fi
+          status=$(curl -sS -o /tmp/supabase-response.json -w '%{http_code}' \
+            --retry 3 --retry-delay 5 --max-time 30 \
+            "${SUPABASE_URL}/rest/v1/centres?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          echo "rest/v1/centres -> HTTP ${status}"
+          cat /tmp/supabase-response.json || true
+          # Any response below 500 means the request reached the project and
+          # counts as activity; RLS may legitimately return an empty list.
+          [ "$status" -lt 500 ]
