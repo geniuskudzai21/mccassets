@@ -18,6 +18,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.tsx'
 import { StatusBadge } from '../components/ui/StatusBadge.tsx'
+import { Spinner } from '../components/ui/Loading.tsx'
 import { useAsset, useAssetHistory } from '../hooks/useAssets.ts'
 import { useAuth } from '../hooks/useAuth.ts'
 import { apiDelete } from '../lib/api.ts'
@@ -65,7 +66,11 @@ export default function AssetDetailPage() {
   }
 
   if (loading) {
-    return <div className="py-16 text-center text-sm text-ink-muted">Loading asset…</div>
+    return (
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-muted">
+        <Spinner size={18} /> Loading asset…
+      </div>
+    )
   }
 
   if (error || !asset) {
@@ -195,7 +200,9 @@ export default function AssetDetailPage() {
             Activity
           </h3>
           {historyLoading ? (
-            <p className="mt-4 text-sm text-ink-muted">Loading activity…</p>
+            <p className="mt-4 inline-flex items-center gap-2 text-sm text-ink-muted">
+              <Spinner size={16} /> Loading activity…
+            </p>
           ) : historyError ? (
             <p role="alert" className="mt-4 text-sm text-status-poor">
               {historyError}

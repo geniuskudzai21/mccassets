@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FileDown } from 'lucide-react'
 import { AdminPageShell } from '../../components/admin/AdminPageShell.tsx'
+import { Spinner } from '../../components/ui/Loading.tsx'
 import { apiGet } from '../../lib/api.ts'
 import {
   buildAssetReportPdf,
@@ -103,7 +104,11 @@ export default function ReportsPage() {
         </p>
       ) : null}
 
-      {loading ? <p className="text-sm text-ink-muted">Loading reports…</p> : null}
+      {loading ? (
+        <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+          <Spinner size={16} /> Loading reports…
+        </p>
+      ) : null}
 
       {summary ? (
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

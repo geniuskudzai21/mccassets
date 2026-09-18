@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import Button from '../components/ui/Button.tsx'
 import DataTable, { type Column } from '../components/ui/DataTable.tsx'
 import EmptyState from '../components/ui/EmptyState.tsx'
+import { SkeletonRows } from '../components/ui/Loading.tsx'
 import Select from '../components/ui/Select.tsx'
 import { StatusBadge } from '../components/ui/StatusBadge.tsx'
 import { assetStatuses, assetTypes } from '../schemas/asset.schema.ts'
@@ -221,7 +222,7 @@ export default function AssetsPage() {
 
       <div className="mt-6">
         {loading ? (
-          <div className="py-16 text-center text-sm text-ink-muted">Loading assets…</div>
+          <SkeletonRows rows={6} />
         ) : error ? (
           <EmptyState
             icon={<Package className="h-10 w-10" />}

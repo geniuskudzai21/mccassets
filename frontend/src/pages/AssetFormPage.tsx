@@ -11,6 +11,7 @@ import {
 } from '../schemas/asset.schema.ts'
 import { useAsset, useCentres, useDepartments } from '../hooks/useAssets.ts'
 import Button from '../components/ui/Button.tsx'
+import { Spinner } from '../components/ui/Loading.tsx'
 import Select from '../components/ui/Select.tsx'
 import { apiPatch, apiPost } from '../lib/api.ts'
 import type { AssetRow } from '../types/asset.ts'
@@ -77,7 +78,11 @@ export default function AssetFormPage() {
   }, [isEdit, asset, reset])
 
   if (isEdit && assetLoading) {
-    return <div className="py-16 text-center text-sm text-ink-muted">Loading asset…</div>
+    return (
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-muted">
+        <Spinner size={18} /> Loading asset…
+      </div>
+    )
   }
 
   if (isEdit && !asset) {

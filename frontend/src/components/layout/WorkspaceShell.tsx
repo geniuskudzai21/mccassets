@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.ts'
+import { LoadingScreen } from '../ui/Loading.tsx'
 import type { UserRole } from '../../types/db.ts'
 import AppShell from './AppShell.tsx'
 
@@ -14,11 +15,7 @@ export default function WorkspaceShell({ roles, children }: WorkspaceShellProps)
   const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
-        Loading…
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!user) {

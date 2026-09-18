@@ -1,5 +1,6 @@
 import { Bell, CheckCheck, Wrench, ShieldAlert, ArrowLeftRight, CalendarClock, AlertTriangle } from 'lucide-react'
 import EmptyState from '../components/ui/EmptyState.tsx'
+import { SkeletonRows } from '../components/ui/Loading.tsx'
 import { useNotifications } from '../hooks/useNotifications.ts'
 import { formatDate } from '../types/asset.ts'
 
@@ -37,7 +38,7 @@ export default function NotificationsPage() {
       </div>
 
       {loading ? (
-        <p className="py-10 text-center text-sm text-ink-muted">Loading notifications…</p>
+        <SkeletonRows rows={5} />
       ) : error ? (
         <EmptyState
           icon={<Bell className="h-10 w-10" />}

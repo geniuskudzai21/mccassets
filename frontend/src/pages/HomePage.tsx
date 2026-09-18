@@ -11,6 +11,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import Button from '../components/ui/Button.tsx'
+import { LoadingScreen } from '../components/ui/Loading.tsx'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import { LogoMark } from '../components/brand/LogoMark.tsx'
 import { ScheduleCard } from '../components/schedule/ScheduleCard.tsx'
@@ -58,11 +59,7 @@ export default function HomePage() {
   const { user, role, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
-        Loading…
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (user && role === 'technician') {
@@ -123,11 +120,7 @@ export default function HomePage() {
   }
 
   if (user && role === null) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
-        Loading your workspace…
-      </div>
-    )
+    return <LoadingScreen label="Loading your workspace…" />
   }
 
   return (

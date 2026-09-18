@@ -5,6 +5,7 @@ import { apiGet, apiPost } from '../../lib/api.ts'
 import { notifyNotificationsChanged } from '../../lib/notificationsBus.ts'
 import { formatDate } from '../../types/asset.ts'
 import { REQUEST_STATUS_COLORS, REQUEST_STATUS_LABELS } from '../../lib/status.ts'
+import { Spinner } from '../ui/Loading.tsx'
 import type { MaintenanceRequestRow } from '../maintenance/MaintenanceList.tsx'
 
 export function MyMaintenanceList() {
@@ -58,7 +59,11 @@ export function MyMaintenanceList() {
   const loading = !loaded && error === null
 
   if (loading) {
-    return <p className="text-sm text-ink-muted">Loading your tasks…</p>
+    return (
+      <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+        <Spinner size={16} /> Loading your tasks…
+      </p>
+    )
   }
 
   if (error) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AlertTriangle, CalendarClock, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { apiGet } from '../../lib/api.ts'
+import { Spinner } from '../ui/Loading.tsx'
 import type {
   DueInspectionItem,
   DueSchedulesResponse,
@@ -97,7 +98,9 @@ export function ScheduleCard({ showReplacement = false }: { showReplacement?: bo
           {error}
         </p>
       ) : loading ? (
-        <p className="mt-3 text-sm text-ink-muted">Loading schedule…</p>
+        <p className="mt-3 inline-flex items-center gap-2 text-sm text-ink-muted">
+          <Spinner size={16} /> Loading schedule…
+        </p>
       ) : !schedule || dueCount === 0 ? (
         <p className="mt-3 text-sm text-ink-muted">
           No inspections or warranties are due in the next 90 days.

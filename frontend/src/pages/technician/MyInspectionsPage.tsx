@@ -2,6 +2,7 @@ import { ClipboardList } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import EmptyState from '../../components/ui/EmptyState.tsx'
+import { Skeleton, SkeletonRows } from '../../components/ui/Loading.tsx'
 import { StatusBadge } from '../../components/ui/StatusBadge.tsx'
 import { useAuth } from '../../hooks/useAuth.ts'
 import { api } from '../../lib/api.ts'
@@ -75,7 +76,9 @@ export default function MyInspectionsPage() {
       <h2 className="font-serif text-xl font-semibold text-ink">My inspections</h2>
 
       {loading ? (
-        <div className="py-16 text-center text-sm text-ink-muted">Loading…</div>
+        <div className="mt-3">
+          <SkeletonRows rows={4} />
+        </div>
       ) : error ? (
         <EmptyState
           icon={<ClipboardList className="h-10 w-10" />}
@@ -119,7 +122,11 @@ export default function MyInspectionsPage() {
                 className="flex items-center gap-3 rounded-xl border border-line bg-white p-4 shadow-sm"
               >
                 <div className="flex-1">
-                  <p className="font-medium text-ink">{asset?.asset_tag ?? 'Loading…'}</p>
+                  {asset ? (
+                    <p className="font-medium text-ink">{asset.asset_tag}</p>
+                  ) : (
+                    <Skeleton className="h-4 w-24" />
+                  )}
                   <p className="text-sm text-ink-muted">
                     {asset ? `${assetTypeLabel[asset.type] ?? asset.type} · ` : ''}
                     {formatDate(inspection.inspected_at)}

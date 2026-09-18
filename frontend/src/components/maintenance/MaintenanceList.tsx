@@ -3,6 +3,7 @@ import { Wrench } from 'lucide-react'
 import { apiGet, apiPatch } from '../../lib/api.ts'
 import { formatDate } from '../../types/asset.ts'
 import { REQUEST_STATUS_COLORS, REQUEST_STATUS_LABELS } from '../../lib/status.ts'
+import { Spinner } from '../ui/Loading.tsx'
 
 export interface MaintenanceLink {
   id: string
@@ -172,7 +173,9 @@ export function MaintenanceList() {
   return (
     <div>
       {loading ? (
-        <p className="text-sm text-ink-muted">Loading maintenance requests…</p>
+        <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+          <Spinner size={16} /> Loading maintenance requests…
+        </p>
       ) : error ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p role="alert" className="text-sm text-status-poor">

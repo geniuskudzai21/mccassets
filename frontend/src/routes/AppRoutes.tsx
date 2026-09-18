@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { LoadingScreen } from '../components/ui/Loading.tsx'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
 import WorkspaceShell from '../components/layout/WorkspaceShell.tsx'
 import HomePage from '../pages/HomePage.tsx'
@@ -24,9 +25,7 @@ function RoleDashboardRedirect() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
-        Loading…
-      </div>
+    <LoadingScreen />
     )
   }
 
@@ -41,9 +40,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
-        Loading…
-      </div>
+    <LoadingScreen />
     )
   }
 
@@ -59,9 +56,7 @@ function RequireRole({ roles, children }: { roles: UserRole[]; children: ReactNo
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-ink-muted">
-        Loading…
-      </div>
+    <LoadingScreen />
     )
   }
 

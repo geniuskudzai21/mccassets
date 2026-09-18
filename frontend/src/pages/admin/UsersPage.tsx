@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import { AdminPageShell } from '../../components/admin/AdminPageShell.tsx'
+import { SkeletonRows } from '../../components/ui/Loading.tsx'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../lib/api.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
 import type { UserRole } from '../../types/db.ts'
@@ -430,9 +431,7 @@ export default function UsersPage() {
       </ul>
 
       {!loaded && error === null ? (
-        <p className="rounded-md border border-dashed border-line p-8 text-center text-sm text-ink-muted">
-          Loading users…
-        </p>
+        <SkeletonRows rows={5} />
       ) : null}
 
       {loaded && users.length === 0 && error === null ? (

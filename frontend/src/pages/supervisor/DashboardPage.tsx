@@ -8,6 +8,7 @@ import {
 import type { LocationInfo } from '../../components/supervisor/types.ts'
 import { MaintenanceList } from '../../components/maintenance/MaintenanceList.tsx'
 import { ScheduleCard } from '../../components/schedule/ScheduleCard.tsx'
+import { Spinner } from '../../components/ui/Loading.tsx'
 import { apiGet } from '../../lib/api.ts'
 import { formatDate } from '../../types/asset.ts'
 
@@ -91,7 +92,15 @@ export default function DashboardPage() {
             {stats ? (
               <StatusBreakdownChart stats={stats.by_status} />
             ) : (
-              <p className="text-sm text-ink-muted">{loading ? 'Loading…' : 'Unavailable.'}</p>
+              <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+                {loading ? (
+                  <>
+                    <Spinner size={16} /> Loading…
+                  </>
+                ) : (
+                  'Unavailable.'
+                )}
+              </p>
             )}
           </section>
 
@@ -103,7 +112,15 @@ export default function DashboardPage() {
             {stats ? (
               <AssetsMap assets={stats.located} />
             ) : (
-              <p className="text-sm text-ink-muted">{loading ? 'Loading…' : 'Unavailable.'}</p>
+              <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+                {loading ? (
+                  <>
+                    <Spinner size={16} /> Loading…
+                  </>
+                ) : (
+                  'Unavailable.'
+                )}
+              </p>
             )}
           </section>
         </div>

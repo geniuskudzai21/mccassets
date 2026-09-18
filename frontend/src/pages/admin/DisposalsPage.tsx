@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { AdminPageShell } from '../../components/admin/AdminPageShell.tsx'
+import { SkeletonRows } from '../../components/ui/Loading.tsx'
 import { apiGet, apiPatch, apiPost } from '../../lib/api.ts'
 import { formatDate, assetTypeLabel } from '../../types/asset.ts'
 import type { AssetStatus } from '../../types/db.ts'
@@ -248,9 +249,7 @@ export default function DisposalsPage() {
       </ul>
 
       {!loaded && error === null ? (
-        <p className="rounded-md border border-dashed border-line p-8 text-center text-sm text-ink-muted">
-          Loading disposals…
-        </p>
+        <SkeletonRows rows={4} />
       ) : null}
 
       {loaded && error === null && disposals.length === 0 ? (

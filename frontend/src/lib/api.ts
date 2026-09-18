@@ -2,6 +2,13 @@ import { supabase } from './supabase.ts'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
 const SESSION_GRACE_MS = 30 * 1000
+const REQUEST_TIMEOUT_MS = 30 * 1000
+const MAX_ATTEMPTS = 3
+const RETRY_BASE_MS = 1500
+const RETRYABLE_STATUS = new Set([502, 503, 504])
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const isIdempotent = (method: string) => method === 'GET' || method === 'HEAD'
 
 export interface ApiErrorShape {
   code: string
@@ -79,6 +86,9 @@ async function parseErrorBody(response: Response): Promise<ApiErrorShape> {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method ?? 'GET').toUpperCase()
+  const maxAttempts = isIdempotent(method) ? MAX_ATTEMPTS : 1
+
   const headers = new Headers(init?.headers)
   headers.set('Content-Type', 'application/json')
 
@@ -95,16 +105,42 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     return fetch(`${API_BASE}${path}`, {
       ...init,
       headers: finalHeaders,
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
   }
 
-  let response = await request(accessToken)
+  // Cold server instances (e.g. Render waking from sleep) can take a while,
+  // so give transient failures a few patient attempts before surfacing an
+  // error. Only idempotent requests are retried to avoid duplicate writes.
+  const send = async (token: string | null): Promise<Response> => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await request(token)
+        if (RETRYABLE_STATUS.has(response.status) && attempt < maxAttempts) {
+          await delay(RETRY_BASE_MS * attempt)
+          continue
+        }
+        return response
+      } catch (error) {
+        if (attempt >= maxAttempts) {
+          const message =
+            error instanceof DOMException && error.name === 'TimeoutError'
+              ? 'The server is taking longer than usual to respond. Please try again in a moment.'
+              : 'Could not reach the server. Check your connection and try again.'
+          throw new ApiError(0, { code: 'NETWORK', message })
+        }
+        await delay(RETRY_BASE_MS * attempt)
+      }
+    }
+    throw new ApiError(0, { code: 'NETWORK', message: 'Could not reach the server.' })
+  }
+
+  let response = await send(accessToken)
 
   if (response.status === 401 && accessToken) {
     const freshToken = await recoverSession()
     if (freshToken) {
-      response = await request(freshToken)
+      response = await send(freshToken)
     }
   }
 
