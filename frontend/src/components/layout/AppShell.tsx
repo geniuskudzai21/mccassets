@@ -87,7 +87,7 @@ function SidebarUser({
       <button
         type="button"
         onClick={onSignOut}
-        className="mt-3 flex w-full items-center justify-start gap-3 rounded-md border border-white/20 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
+        className="mt-3 flex items-center justify-start gap-3 rounded-md border border-white/20 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
       >
         <LogOut className="h-4 w-4 shrink-0" aria-hidden />
         Sign out
