@@ -2,12 +2,15 @@
 # This is an npm-workspaces monorepo: the lockfile lives at the repo root, so
 # install/build/start run at the root and target the `backend` workspace.
 # Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CORS_ORIGIN in the dashboard.
+# Note: with NODE_ENV=production, npm skips devDependencies by default, so the
+# build must explicitly install them (`--include=dev`) to get typescript, tsc
+# and the @types packages used by the type-check step.
 
 services:
   - type: web
     name: mcas-ict-backend
     runtime: node
-    buildCommand: npm ci && npm run build --workspace backend
+    buildCommand: npm ci --include=dev && npm run build --workspace backend
     startCommand: npm run start --workspace backend
     healthCheckPath: /api/health
     envVars:
