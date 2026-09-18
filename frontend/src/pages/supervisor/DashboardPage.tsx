@@ -61,8 +61,11 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full text-ink">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper py-4">
-        <h1 className="font-serif text-xl font-semibold">Supervisor dashboard</h1>
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+        <div>
+          <h1 className="font-serif text-xl font-semibold text-ink">Supervisor dashboard</h1>
+          <p className="mt-0.5 text-sm text-ink-muted">Live condition of the ICT asset register.</p>
+        </div>
         <span className="inline-flex items-center gap-2 text-sm text-ink-muted">
           <LayoutDashboard className="h-4 w-4 text-council-teal" aria-hidden />
           {stats ? `${stats.total} assets` : 'Overview'}

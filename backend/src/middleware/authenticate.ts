@@ -15,6 +15,12 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 
     const { data, error } = await supabase.auth.getUser(token)
     if (error || !data.user) {
+      // eslint-disable-next-line no-console
+      console.error('[auth] token rejected', {
+        status: (error as { status?: number } | null)?.status ?? null,
+        message: error?.message ?? 'missing user',
+        name: error?.name ?? null,
+      })
       throw new HttpError(401, 'Invalid or expired token')
     }
 

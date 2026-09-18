@@ -73,10 +73,6 @@ export default function LoginPage() {
               <h1 className="mt-8 font-serif text-2xl font-semibold leading-snug text-white">
                 One register for every ICT asset the council holds.
               </h1>
-              <p className="mt-3 text-sm leading-relaxed text-white/80">
-                Inspect, maintain and report on computers, network devices and peripherals — from
-                the field or the desk.
-              </p>
 
               <ul className="mt-7 space-y-3">
                 {FEATURES.map(({ icon: Icon, text }) => (

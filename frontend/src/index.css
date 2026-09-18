@@ -6,6 +6,8 @@
   --color-ink-muted: #6b6b65;
   --color-line: #e4e2dc;
   --color-council-teal: #2a5c57;
+  --color-council-teal-dark: #1f4742;
+  --color-council-gold: #cf9425;
   --color-status-good: #3f7d4e;
   --color-status-fair: #b8862e;
   --color-status-poor: #b0432f;
@@ -22,6 +24,33 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--color-ink);
   background-color: var(--color-paper);
+}
+
+button,
+[role='button'],
+a[role='button'],
+input[type='submit'],
+input[type='reset'],
+select {
+  cursor: pointer;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 1.2s infinite;
 }
 
 .asset-map-marker > span {

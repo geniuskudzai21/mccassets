@@ -10,7 +10,7 @@ interface NotificationsResponse {
 
 const POLL_INTERVAL_MS = 60_000
 
-export function NotificationsBell() {
+export function NotificationsBell({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const [unread, setUnread] = useState(0)
 
   useEffect(() => {
@@ -39,7 +39,11 @@ export function NotificationsBell() {
     <Link
       to="/notifications"
       aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ''}`}
-      className="relative flex h-10 w-10 items-center justify-center rounded-md border border-line text-ink transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-council-teal"
+      className={`relative flex h-10 w-10 items-center justify-center rounded-md border transition-colors focus:outline-none focus:ring-2 ${
+        variant === 'dark'
+          ? 'border-white/20 text-white hover:bg-white/10 focus:ring-white'
+          : 'border-line text-ink hover:bg-white focus:ring-council-teal'
+      }`}
     >
       <Bell className="h-5 w-5" aria-hidden />
       {unread > 0 ? (
