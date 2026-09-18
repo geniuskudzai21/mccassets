@@ -58,7 +58,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-paper px-4 py-10">
       <div className="w-full max-w-3xl overflow-hidden rounded-lg border border-line bg-white">
         <div className="grid md:grid-cols-[1.05fr_1fr]">
-          <div className="flex flex-col justify-between bg-council-teal p-8 text-white">
+          <div className="hidden flex-col justify-between bg-council-teal p-8 text-white md:flex">
             <div>
               <div className="flex items-center gap-3">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
@@ -92,6 +92,10 @@ export default function LoginPage() {
           </div>
 
           <div className="p-8">
+            <div
+              aria-hidden
+              className="mx-auto mb-6 h-1 w-full rounded-full bg-gradient-to-r from-council-teal to-council-gold md:hidden"
+            />
             <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
               Welcome back
             </h2>
