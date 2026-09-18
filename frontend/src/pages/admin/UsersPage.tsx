@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import { AdminPageShell } from '../../components/admin/AdminPageShell.tsx'
 import { SkeletonRows } from '../../components/ui/Loading.tsx'
+import { useToast } from '../../components/ui/toast.tsx'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../../lib/api.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
 import type { UserRole } from '../../types/db.ts'
@@ -31,6 +32,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth()
+  const { toast, confirm } = useToast()
   const [users, setUsers] = useState<ManagedUser[]>([])
   const [departments, setDepartments] = useState<DepartmentRow[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -147,19 +149,24 @@ export default function UsersPage() {
   }
 
   async function deleteUser(user: ManagedUser) {
-    if (
-      !window.confirm(
-        `Delete ${user.full_name} (${user.email ?? 'no email'})?\n\nTheir inspections are removed and login access is revoked. This cannot be undone.`,
-      )
-    ) {
-      return
-    }
+    const ok = await confirm({
+      title: `Delete ${user.full_name}?`,
+      message: `${user.email ?? 'No email on file'}\n\nTheir inspections are removed and login access is revoked. This cannot be undone.`,
+      confirmLabel: 'Delete user',
+      danger: true,
+    })
+    if (!ok) return
     setError(null)
     try {
       await apiDelete(`/api/admin/users/${user.id}`)
+      toast({ kind: 'success', title: 'User deleted', message: `${user.full_name} was removed.` })
       load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete the user.')
+      toast({
+        kind: 'error',
+        title: 'Could not delete the user',
+        message: err instanceof Error ? err.message : 'Could not delete the user.',
+      })
     }
   }
 

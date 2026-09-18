@@ -255,6 +255,38 @@ export async function deleteAsset(req: Request, res: Response) {
     throw new HttpError(404, 'Asset not found')
   }
 
+  // Child assets (e.g. peripherals attached to a parent) block deletion with a
+  // clear message instead of silently being orphaned.
+  const { data: children, error: childrenError } = await supabase
+    .from('assets')
+    .select('id')
+    .eq('parent_asset_id', assetId)
+
+  if (childrenError) {
+    throw new HttpError(500, 'Failed to check child assets')
+  }
+  if (children && children.length > 0) {
+    throw new HttpError(409, 'Cannot delete: this asset is the parent of child assets. Remove or reassign them first.')
+  }
+
+  // Related rows are wiped with the asset. inspections already cascade, but the
+  // remaining tables have no ON DELETE rule, so a plain asset delete would hit a
+  // foreign-key violation. Remove them explicitly before deleting the asset.
+  const dependents: { table: 'maintenance_requests' | 'transfers' | 'notifications' | 'disposals' | 'inspections'; column: 'asset_id' }[] = [
+    { table: 'maintenance_requests', column: 'asset_id' },
+    { table: 'transfers', column: 'asset_id' },
+    { table: 'notifications', column: 'asset_id' },
+    { table: 'disposals', column: 'asset_id' },
+    { table: 'inspections', column: 'asset_id' },
+  ]
+
+  for (const { table, column } of dependents) {
+    const { error } = await supabase.from(table).delete().eq(column, assetId)
+    if (error) {
+      throw new HttpError(500, `Failed to remove related ${table.replaceAll('_', ' ')}`)
+    }
+  }
+
   const { error } = await supabase.from('assets').delete().eq('id', assetId)
 
   if (error) {

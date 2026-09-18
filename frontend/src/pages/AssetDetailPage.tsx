@@ -22,6 +22,7 @@ import { Spinner } from '../components/ui/Loading.tsx'
 import { useAsset, useAssetHistory } from '../hooks/useAssets.ts'
 import { useAuth } from '../hooks/useAuth.ts'
 import { apiDelete } from '../lib/api.ts'
+import { useToast } from '../components/ui/toast.tsx'
 import { assetTypeLabel, formatCurrency, formatDate } from '../types/asset.ts'
 
 export default function AssetDetailPage() {
@@ -30,7 +31,7 @@ export default function AssetDetailPage() {
   const { role } = useAuth()
   const { asset, loading, error } = useAsset(id)
   const { timeline, loading: historyLoading, error: historyError } = useAssetHistory(id)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const { toast, confirm } = useToast()
   const [deleting, setDeleting] = useState(false)
 
   const canEdit = role === 'supervisor' || role === 'admin'
@@ -53,14 +54,25 @@ export default function AssetDetailPage() {
   }, [timeline])
 
   async function handleDelete() {
-    if (!asset || !window.confirm(`Delete ${asset.asset_tag}? This cannot be undone.`)) return
+    if (!asset) return
+    const ok = await confirm({
+      title: `Delete ${asset.asset_tag}?`,
+      message: 'Its inspections, maintenance and transfer history will be removed. This cannot be undone.',
+      confirmLabel: 'Delete asset',
+      danger: true,
+    })
+    if (!ok) return
     setDeleting(true)
-    setDeleteError(null)
     try {
       await apiDelete(`/api/assets/${asset.id}`)
+      toast({ kind: 'success', title: 'Asset deleted', message: `${asset.asset_tag} was removed from the register.` })
       navigate('/assets')
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Failed to delete asset')
+      toast({
+        kind: 'error',
+        title: 'Could not delete asset',
+        message: err instanceof Error ? err.message : 'Failed to delete asset',
+      })
       setDeleting(false)
     }
   }
@@ -162,12 +174,6 @@ export default function AssetDetailPage() {
           )}
         </div>
       </div>
-
-      {deleteError ? (
-        <p role="alert" className="mt-4 text-sm text-status-poor">
-          {deleteError}
-        </p>
-      ) : null}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section
