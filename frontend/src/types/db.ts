@@ -295,6 +295,7 @@ export interface MaintenanceRequest {
     estimated_cost: number | null
     created_at: string
     resolved_at: string | null
+    acknowledged_at: string | null
   }
   Insert: {
     id?: string
@@ -306,6 +307,7 @@ export interface MaintenanceRequest {
     estimated_cost?: number | null
     created_at?: string
     resolved_at?: string | null
+    acknowledged_at?: string | null
   }
   Update: {
     id?: string
@@ -317,6 +319,7 @@ export interface MaintenanceRequest {
     estimated_cost?: number | null
     created_at?: string
     resolved_at?: string | null
+    acknowledged_at?: string | null
   }
   Relationships: []
 }

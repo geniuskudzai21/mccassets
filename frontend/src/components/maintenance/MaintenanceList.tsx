@@ -21,6 +21,7 @@ export interface MaintenanceRequestRow {
   estimated_cost: number | null
   created_at: string
   resolved_at: string | null
+  acknowledged_at: string | null
   asset: MaintenanceLink | null
   assignee: { id: string; full_name: string; role: string } | null
 }

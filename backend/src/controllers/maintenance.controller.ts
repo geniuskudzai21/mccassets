@@ -177,3 +177,55 @@ export async function updateMaintenanceRequest(req: Request, res: Response) {
 
   res.json({ data: rows[0] })
 }
+
+export async function acknowledgeMaintenanceRequest(req: Request, res: Response) {
+  const value = req.params.id
+  if (typeof value !== 'string') {
+    throw new HttpError(404, 'Maintenance request not found')
+  }
+  const id = value
+  const supabase = getSupabase()
+  const userId = req.user?.id
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('maintenance_requests')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (fetchError || !existing) {
+    throw new HttpError(404, 'Maintenance request not found')
+  }
+
+  if (req.user?.role === 'technician' && existing.assigned_to !== userId) {
+    throw new HttpError(403, 'Only the assigned technician can acknowledge this task')
+  }
+
+  let updated = existing as MaintenanceWithLinks
+  if (!existing.acknowledged_at) {
+    const { data, error } = await supabase
+      .from('maintenance_requests')
+      .update({ acknowledged_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw new HttpError(500, 'Failed to acknowledge maintenance request')
+    }
+    updated = data as MaintenanceWithLinks
+  }
+
+  const notificationTarget = userId ?? existing.assigned_to
+  if (notificationTarget) {
+    await markNotificationsRead({
+      userId: notificationTarget,
+      type: 'maintenance_assigned',
+      assetId: existing.asset_id,
+    })
+  }
+
+  const rows = await attachLinks([updated])
+
+  res.json({ data: rows[0] })
+}

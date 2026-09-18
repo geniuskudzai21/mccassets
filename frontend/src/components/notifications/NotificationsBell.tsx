@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.ts'
+import { NOTIFICATIONS_CHANGED_EVENT } from '../../lib/notificationsBus.ts'
 
 interface NotificationsResponse {
   unread: number
@@ -26,9 +27,11 @@ export function NotificationsBell() {
 
     void refresh()
     const interval = window.setInterval(() => void refresh(), POLL_INTERVAL_MS)
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
     return () => {
       active = false
       window.clearInterval(interval)
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
     }
   }, [])
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle2, Wrench } from 'lucide-react'
 import { useNotifications } from '../../hooks/useNotifications.ts'
 import { apiGet, apiPost } from '../../lib/api.ts'
+import { notifyNotificationsChanged } from '../../lib/notificationsBus.ts'
 import { formatDate } from '../../types/asset.ts'
 import { REQUEST_STATUS_COLORS, REQUEST_STATUS_LABELS } from '../../lib/status.ts'
 import type { MaintenanceRequestRow } from '../maintenance/MaintenanceList.tsx'
@@ -10,7 +11,7 @@ export function MyMaintenanceList() {
   const [requests, setRequests] = useState<MaintenanceRequestRow[]>([])
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set())
+  const [acknowledging, setAcknowledging] = useState<Set<string>>(new Set())
   const { refresh } = useNotifications()
 
   useEffect(() => {
@@ -33,21 +34,24 @@ export function MyMaintenanceList() {
     }
   }, [])
 
-  async function handleAcknowledge(assetId: string) {
-    if (!assetId) return
+  async function handleAcknowledge(id: string) {
+    setAcknowledging((previous) => new Set(previous).add(id))
     try {
-      await apiPost<{ data: { updated: number } }>('/api/notifications/read-by', {
-        type: 'maintenance_assigned',
-        asset_id: assetId,
-      })
-      setAcknowledged((previous) => {
-        const next = new Set(previous)
-        next.add(assetId)
-        return next
-      })
+      const result = await apiPost<{ data: MaintenanceRequestRow }>(
+        `/api/maintenance-requests/${id}/acknowledge`,
+        {},
+      )
+      setRequests((current) => current.map((request) => (request.id === id ? result.data : request)))
+      notifyNotificationsChanged()
       void refresh()
     } catch {
       /* acknowledge is best-effort; the row stays interactive */
+    } finally {
+      setAcknowledging((previous) => {
+        const next = new Set(previous)
+        next.delete(id)
+        return next
+      })
     }
   }
 
@@ -79,8 +83,8 @@ export function MyMaintenanceList() {
   return (
     <ul className="space-y-2">
       {requests.map((request) => {
-        const assetId = request.asset_id
-        const isAcknowledged = assetId ? acknowledged.has(assetId) : false
+        const isAcknowledged = request.acknowledged_at !== null
+        const isWorking = acknowledging.has(request.id)
         return (
           <li key={request.id} className="rounded-md border border-line bg-paper p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -109,11 +113,12 @@ export function MyMaintenanceList() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => void handleAcknowledge(assetId)}
-                  className="inline-flex items-center gap-1 rounded-md border border-council-teal px-2.5 py-1 text-xs font-medium text-council-teal transition-colors hover:bg-council-teal focus:outline-none focus:ring-2 focus:ring-council-teal"
+                  onClick={() => void handleAcknowledge(request.id)}
+                  disabled={isWorking}
+                  className="inline-flex items-center gap-1 rounded-md border border-council-teal px-2.5 py-1 text-xs font-medium text-council-teal transition-colors hover:bg-council-teal focus:outline-none focus:ring-2 focus:ring-council-teal disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                  Acknowledge
+                  {isWorking ? 'Acknowledging…' : 'Acknowledge'}
                 </button>
               )}
             </div>

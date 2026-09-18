@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, apiPatch, apiPost } from '../lib/api.ts'
+import { notifyNotificationsChanged } from '../lib/notificationsBus.ts'
 import type { NotificationEntry } from '../types/asset.ts'
 
 interface NotificationsResponse {
@@ -55,6 +56,7 @@ export function useNotifications() {
         current.map((item) => (item.id === id ? { ...item, read_at: new Date().toISOString() } : item)),
       )
       setUnread((current) => Math.max(0, current - 1))
+      notifyNotificationsChanged()
     },
     [],
   )
@@ -67,6 +69,7 @@ export function useNotifications() {
       ),
     )
     setUnread(0)
+    notifyNotificationsChanged()
   }, [])
 
   return { notifications, unread, loading, error, refresh, markRead, markAllRead }
