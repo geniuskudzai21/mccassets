@@ -11,7 +11,7 @@ export default function ProfilePage() {
     <div className="px-4 py-5">
       <h2 className="font-serif text-xl font-semibold text-ink">Profile</h2>
 
-      <div className="mt-4 rounded-md border border-line bg-paper p-4 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-line bg-paper p-4 shadow-sm">
         <div className="flex items-center gap-2 text-council-teal">
           <ShieldCheck className="h-5 w-5" aria-hidden />
           <span className="capitalize text-ink">{role ?? 'technician'}</span>

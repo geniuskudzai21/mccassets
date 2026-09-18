@@ -86,7 +86,7 @@ export function MyMaintenanceList() {
         const isAcknowledged = request.acknowledged_at !== null
         const isWorking = acknowledging.has(request.id)
         return (
-          <li key={request.id} className="rounded-md border border-line bg-paper p-3">
+          <li key={request.id} className="rounded-xl border border-line bg-paper p-3 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium text-ink">
                 {request.asset?.asset_tag ?? 'Unknown asset'}

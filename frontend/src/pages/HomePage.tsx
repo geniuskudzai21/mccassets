@@ -8,6 +8,7 @@ import {
   MapPin,
   ScanLine,
   ShieldCheck,
+  Wrench,
 } from 'lucide-react'
 import Button from '../components/ui/Button.tsx'
 import TechnicianLayout from '../components/layout/TechnicianLayout.tsx'
@@ -68,24 +69,42 @@ export default function HomePage() {
     return (
       <TechnicianLayout>
         <div className="px-4 py-5">
-          <h2 className="font-serif text-xl font-semibold text-ink">Ready to inspect?</h2>
-          <p className="mt-1 text-sm text-ink-muted">
-            Scan an asset QR code to record its condition, photos and GPS location.
-          </p>
-          <Link
-            to="/scan"
-            className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-council-teal px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-council-teal/90 focus:outline-none focus:ring-2 focus:ring-council-teal focus:ring-offset-1"
-          >
-            <ScanLine className="h-5 w-5" aria-hidden />
-            Start inspection
-          </Link>
+          <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-council-teal to-council-teal-dark p-5 text-white shadow-lg shadow-council-teal/25">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-white/10 blur-2xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-12 -left-8 h-32 w-32 rounded-full bg-council-gold/20 blur-2xl"
+            />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+              Field workspace
+            </p>
+            <h2 className="mt-1 font-serif text-2xl font-semibold">Ready to inspect?</h2>
+            <p className="mt-1 max-w-sm text-sm text-white/80">
+              Scan an asset QR code to record its condition, photos and GPS location.
+            </p>
+            <Link
+              to="/scan"
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-council-teal-dark shadow-sm transition-colors hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-council-teal"
+            >
+              <ScanLine className="h-5 w-5" aria-hidden />
+              Start inspection
+            </Link>
+          </section>
 
-          <div className="mt-6">
+          <div className="mt-5">
             <ScheduleCard />
           </div>
 
-          <section className="mt-6 rounded-md border border-line bg-paper p-5">
-            <h3 className="font-serif text-base font-semibold text-ink">My maintenance tasks</h3>
+          <section className="mt-5 rounded-2xl border border-line bg-paper p-5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-council-teal/10 text-council-teal">
+                <Wrench className="h-4 w-4" aria-hidden />
+              </span>
+              <h3 className="font-serif text-base font-semibold text-ink">My maintenance tasks</h3>
+            </div>
             <div className="mt-3">
               <MyMaintenanceList />
             </div>

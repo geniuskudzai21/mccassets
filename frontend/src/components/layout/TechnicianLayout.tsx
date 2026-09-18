@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { SYNC_INTERVAL_MS, trySyncOnce } from '../../lib/sync.ts'
 import BottomNav from './BottomNav.tsx'
 import { SyncStatusIndicator } from './SyncStatusIndicator.tsx'
@@ -26,12 +27,17 @@ export default function TechnicianLayout({ children }: { children: ReactNode }) 
 
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <div className="mx-auto max-w-md pb-20">
-        <header className="flex items-center justify-between border-b border-line bg-paper px-4 py-3">
-          <p className="flex items-center gap-2 font-serif text-lg font-semibold">
-            <LogoMark size={28} ringless />
-            MCAS-ICT
-          </p>
+      <div className="mx-auto max-w-md pb-28">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-paper px-4 py-3 shadow-[0_8px_16px_-8px_rgba(31,71,66,0.35)]">
+          <Link
+            to="/"
+            className="flex items-center gap-2 rounded-md focus:outline-none focus:ring-2 focus:ring-council-teal"
+          >
+            <LogoMark size={30} ringless />
+            <span className="font-serif text-lg font-semibold tracking-tight text-council-teal-dark">
+              MCAS-ICT
+            </span>
+          </Link>
           <div className="flex items-center gap-2">
             <NotificationsBell />
             <SyncStatusIndicator />

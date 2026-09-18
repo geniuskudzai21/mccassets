@@ -116,7 +116,7 @@ export default function MyInspectionsPage() {
             return (
               <li
                 key={inspection.id}
-                className="flex items-center gap-3 rounded-md border border-line bg-white p-4 shadow-sm"
+                className="flex items-center gap-3 rounded-xl border border-line bg-white p-4 shadow-sm"
               >
                 <div className="flex-1">
                   <p className="font-medium text-ink">{asset?.asset_tag ?? 'Loading…'}</p>

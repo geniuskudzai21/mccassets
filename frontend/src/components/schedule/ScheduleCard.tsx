@@ -84,7 +84,7 @@ export function ScheduleCard({ showReplacement = false }: { showReplacement?: bo
   const loading = schedule === null && error === null
 
   return (
-    <section className="rounded-md border border-line bg-paper p-5">
+    <section className="rounded-2xl border border-line bg-paper p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SectionHeader>Schedule</SectionHeader>
         <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
