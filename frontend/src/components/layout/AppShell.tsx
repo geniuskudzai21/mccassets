@@ -74,24 +74,26 @@ function SidebarUser({
   onSignOut: () => void
 }) {
   return (
-    <div className="border-t border-white/10 p-4">
-      <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 font-serif text-sm font-semibold text-white">
-          {(profileName ?? '?').charAt(0).toUpperCase()}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-white">{profileName ?? '—'}</p>
-          <p className="truncate text-xs text-white/60 capitalize">{role ?? '—'}</p>
+    <div className="border-t border-white/10 p-3">
+      <div className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-2.5 py-2 ring-1 ring-white/10">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-council-gold/40 via-white/15 to-white/5 font-serif text-xs font-semibold text-white ring-1 ring-white/20">
+            {(profileName ?? '?').charAt(0).toUpperCase()}
+          </span>
+          <p className="min-w-0 truncate text-xs font-semibold uppercase tracking-widest text-white/70">
+            {role ?? '—'}
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={onSignOut}
+          title="Sign out"
+          className="group flex shrink-0 items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-white/30 hover:bg-white/15 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          <LogOut className="h-3.5 w-3.5" aria-hidden />
+          Sign out
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onSignOut}
-        className="mt-3 flex items-center justify-start gap-3 rounded-md border border-white/20 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
-      >
-        <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-        Sign out
-      </button>
     </div>
   )
 }
