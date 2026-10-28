@@ -9,6 +9,7 @@ import {
   Menu,
   Settings2,
   Trash2,
+  TrendingDown,
   X,
 } from 'lucide-react'
 import { LogoMark } from '../brand/LogoMark.tsx'
@@ -29,6 +30,7 @@ const NAV: NavItem[] = [
   { to: '/notifications', label: 'Notifications', icon: Bell, adminOnly: false },
   { to: '/admin/users', label: 'User management', icon: Settings2, adminOnly: true },
   { to: '/admin/disposals', label: 'Disposals', icon: Trash2, adminOnly: true },
+  { to: '/admin/depreciation', label: 'Depreciation', icon: TrendingDown, adminOnly: true },
   { to: '/admin/reports', label: 'Reports', icon: FileBarChart, adminOnly: true },
 ]
 

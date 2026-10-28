@@ -15,6 +15,7 @@ import SupervisorDashboardPage from '../pages/supervisor/DashboardPage.tsx'
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.tsx'
 import UsersPage from '../pages/admin/UsersPage.tsx'
 import DisposalsPage from '../pages/admin/DisposalsPage.tsx'
+import DepreciationPage from '../pages/admin/DepreciationPage.tsx'
 import ReportsPage from '../pages/admin/ReportsPage.tsx'
 import { useAuth } from '../hooks/useAuth.ts'
 import type { ReactNode } from 'react'
@@ -119,6 +120,14 @@ export default function AppRoutes() {
         element={
           <WorkspaceShell roles={['admin']}>
             <DisposalsPage />
+          </WorkspaceShell>
+        }
+      />
+      <Route
+        path="/admin/depreciation"
+        element={
+          <WorkspaceShell roles={['admin']}>
+            <DepreciationPage />
           </WorkspaceShell>
         }
       />
